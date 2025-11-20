@@ -27,7 +27,10 @@ public class Subjects {
     @Column(name = "subject_name", nullable = false)
     private String subjectName;
 
-     @Column(nullable = false)
+    @Column(nullable = false)
+    private String subjectCode; 
+
+    @Column(nullable = false)
     private String marksType; 
     // values: "MARKS" or "GRADE"
 

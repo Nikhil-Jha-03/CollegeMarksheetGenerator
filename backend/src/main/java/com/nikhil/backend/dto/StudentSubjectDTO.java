@@ -1,8 +1,17 @@
 package com.nikhil.backend.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@ToString
 public class StudentSubjectDTO {
     private long studentSubjectId;
     private String subjectName;
-    private String totalMarks; 
-    private String obtainedMarks;
+    private String total; 
+    private String obtained;
 }

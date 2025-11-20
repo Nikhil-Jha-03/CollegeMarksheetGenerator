@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Templete from './Templete';
 import api from '../api/axios';
 import { X } from 'lucide-react';
+import {toast} from 'react-toastify'
 
 const AddMarkSheetPage = () => {
   const [showTemplate, setShowTemplate] = useState(false);
@@ -10,7 +11,7 @@ const AddMarkSheetPage = () => {
   const [student, setStudent] = useState({
     name: "",
     motherName: "",
-    class: "",
+    studentClass: "",
     dob: "",
     grNo: "",
     subjects: [],
@@ -25,7 +26,7 @@ const AddMarkSheetPage = () => {
   const toggleView = () => setShowTemplate(prev => !prev);
 
   const handleInputChange = (field, value) => {
-    if (field === "class") {
+    if (field === "studentClass") {
       const id = parseInt(value)
       const classText = classDisplay.find(item => item.classId == id)?.className
       setStudent(prev => ({ ...prev, [field]: classText }));
@@ -53,17 +54,21 @@ const AddMarkSheetPage = () => {
       setLoading(true);
       const response = await api.get(`defaultData/getsubjectinfo/${classId}`);
       if (response?.data && response.data.length > 0) {
+
+        console.log(response.data)
         const subjects = response.data.map(item => ({
-          name: item.subjectName,
-          total: item.marksType === "Marks" ? 100 : "Grade",
+          subjectName: item.subjectName,
+          total: item.marksType === "MARKS" ? 100 : "GRADE",
           obtained: "",
-          type: item.marksType
+          type: item.marksType,
+          subjectCode: item.subjectCode
         }));
         setStudent(prev => ({ ...prev, subjects }));
       }
     } catch (error) {
       console.error("Error fetching subjects:", error);
     } finally {
+      console.log(student.subjects)
       setLoading(false);
     }
   };
@@ -75,7 +80,7 @@ const AddMarkSheetPage = () => {
     if (selectedClass) {
       setStudent(prev => ({
         ...prev,
-        class: selectedClass.className,
+        studentClass: selectedClass.className,
         subjects: []
       }));
       fetchSubjects(classId);
@@ -87,7 +92,7 @@ const AddMarkSheetPage = () => {
       ...prev,
       subjects: [
         ...prev.subjects,
-        { name: "", total: 100, obtained: "", type: "Marks" }
+        { subjectName: "", total: 100, obtained: "", type: "MARKS", subjectCode:0 }
       ]
     }));
   };
@@ -139,7 +144,8 @@ const AddMarkSheetPage = () => {
   }, [student.subjects]);
 
   const handleSave = async () => {
-    if (!student.name || !student.motherName || !student.class || !student.dob || !student.grNo) {
+    console.log(student)
+    if (!student.name || !student.motherName || !student.studentClass || !student.dob || !student.grNo) {
       alert("Please fill all required fields");
       return;
     }
@@ -148,7 +154,14 @@ const AddMarkSheetPage = () => {
       return;
     }
 
-    console.log("Saving student data:", student);
+    const response = await api.post("/student/savestudent",student)
+    if (!response?.data?.success) {
+      return toast.error(response?.data?.message)
+    }else{
+      toast.success(response?.data?.message)
+    }
+
+    console.log("response",response.data)
     toggleView();
   };
 
@@ -159,6 +172,8 @@ const AddMarkSheetPage = () => {
   useEffect(() => {
     fetchClasses();
   }, []);
+
+  // console.log(student.subjects)
 
   if (showTemplate) {
     return (
@@ -244,7 +259,7 @@ const AddMarkSheetPage = () => {
               <div>
                 <label className="block text-base font-semibold mb-2">G.R. No. *</label>
                 <input
-                  type="text"
+                  type="number"
                   value={student.grNo}
                   onChange={(e) => handleInputChange('grNo', e.target.value)}
                   className="w-full border-2 border-gray-300 px-4 py-3 text-base focus:border-gray-800 focus:outline-none"
@@ -281,13 +296,14 @@ const AddMarkSheetPage = () => {
             <div>
                 {student.subjects.map((sub, index) => (
                   <div key={index} className="grid grid-cols-3 gap-4 mb-3">
-                    <div>
+                    <div className='flex items-center'>
+                      <h1>{sub.subjectCode}</h1>
                       <input
                         type="text"
-                        value={sub?.name}
+                        value={sub?.subjectName}
                         placeholder='Enter Subject Name'
-                        onChange={(e) => handleSubjectChange(index, 'name', e.target.value)}
-                        className="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100"
+                        onChange={(e) => handleSubjectChange(index, 'subjectName', e.target.value)}
+                        className="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100 ml-2"
                       />
                     </div>
                     <div>
@@ -301,7 +317,7 @@ const AddMarkSheetPage = () => {
                     <div className='flex items-center gap-2'>
                       <input
                         type="text"
-                        placeholder={sub?.total === "Grade" ? "Enter Grade" : "Marks"}
+                        placeholder={sub?.total === "GRADE" ? "Enter Grade" : "MARKS"}
                         value={sub?.obtained}
                         onChange={(e) => handleSubjectChange(index, 'obtained', e.target.value)}
                         className="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100"

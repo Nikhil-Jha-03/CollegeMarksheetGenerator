@@ -1,9 +1,9 @@
 package com.nikhil.backend.services.implementation;
 
 import java.util.List;
-
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.system.SystemProperties;
 import org.springframework.stereotype.Service;
 
 import com.nikhil.backend.dto.ClassesDTO;
@@ -46,7 +46,18 @@ public class ClassesSubjectImplementation implements ClassesSubjectService {
     @Override
     public List<SubjectsDTO> getSubjectinfo(Long id) {
         List<Subjects> subjects = subjectRepository.findAllByClasses_ClassId(id);
-        List<SubjectsDTO> subjectsDTOs = subjects.stream().map(item -> modelMapper.map(item, SubjectsDTO.class)).toList();
+        
+        // List<SubjectsDTO> subjectsDTOs = subjects.stream().map(item -> modelMapper.map(item, SubjectsDTO.class)).toList();
+        List<SubjectsDTO> subjectsDTOs = subjects.stream().map(item -> {
+            SubjectsDTO sDto = new SubjectsDTO();
+            sDto.setSubjectCode(item.getSubjectCode());
+            sDto.setMarksType(item.getMarksType());
+            sDto.setSubjectName(item.getSubjectName());
+            sDto.setSubjectId(item.getSubjectId());
+            return sDto;
+        }).toList();
+        System.out.println(subjectsDTOs);
+        log.info("Hey",subjectsDTOs);
         return subjectsDTOs;
     }
 

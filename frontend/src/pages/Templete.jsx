@@ -63,7 +63,7 @@ const Templete = ({student}) => {
 
                     <tr>
                         <td className="border p-2">Class</td>
-                        <td className="border p-2 text-center">{student.class}</td>
+                        <td className="border p-2 text-center">{student.studentClass}</td>
                         <td className="border p-2 text-center">Roll No</td>
                         <td className="border p-2 text-center">{student.rollNo}</td>
                     </tr>
@@ -98,7 +98,7 @@ const Templete = ({student}) => {
                 <tbody>
                     {student.subjects.map((sub, i) => (
                         <tr key={i}>
-                            <td className="border p-2">{sub.name}</td>
+                            <td className="border p-2">{sub.subjectName}</td>
                             <td className="border p-2 text-center">{sub.total}</td>
                             <td className="border p-2 text-center">{sub.obtained}</td>
                         </tr>

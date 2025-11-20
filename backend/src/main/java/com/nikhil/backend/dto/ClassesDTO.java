@@ -12,5 +12,4 @@ import lombok.ToString;
 public class ClassesDTO {
     private long classId;
     private String className;
-
 }

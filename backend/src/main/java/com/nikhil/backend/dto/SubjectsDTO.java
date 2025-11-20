@@ -13,4 +13,5 @@ public class SubjectsDTO {
     private long subjectId;
     private String subjectName;
     private String marksType; 
+    private String subjectCode; 
 }

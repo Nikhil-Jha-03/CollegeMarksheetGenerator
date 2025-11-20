@@ -19,7 +19,7 @@ import lombok.RequiredArgsConstructor;
 @Entity
 @Table(name = "StudentDetail", indexes = {
     @Index(name = "idx_gr_no",columnList = "grNo"),
-    @Index(name = "idx_student_name", columnList = "studentName")
+    @Index(name = "idx_name", columnList = "name")
 })
 @AllArgsConstructor
 @RequiredArgsConstructor
@@ -30,14 +30,13 @@ public class Student {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long studentId;
 
-    @Column(nullable = false)
     private long rollNo;
 
     @Column(nullable = false)
-    private String studentName;
+    private String name;
 
     @Column(nullable = false)
-    private String grNo;
+    private long grNo;
 
     @Column(nullable = false)
     private String motherName;
@@ -48,9 +47,13 @@ public class Student {
     private LocalDate dateOfIssue;
     private LocalDate dob;
 
+    private long totalMarks;
+    private long obtainedMarks;
 
+    private double percentage;
+    private String result;
 
     @OneToMany(mappedBy = "student", cascade = CascadeType.ALL,orphanRemoval = true)
-    private List<StudentSubject> studentSubjects;
+    private List<StudentSubject> subjects;
 
 }
