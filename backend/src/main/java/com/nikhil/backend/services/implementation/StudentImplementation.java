@@ -1,12 +1,15 @@
 package com.nikhil.backend.services.implementation;
 
 import java.util.List;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import com.nikhil.backend.dto.FinalStudentDetailDTO;
 import com.nikhil.backend.dto.StudentDetailDTO;
 import com.nikhil.backend.dto.StudentSubjectDTO;
 import com.nikhil.backend.entity.Student;
@@ -15,19 +18,22 @@ import com.nikhil.backend.payload.ApiResponse;
 import com.nikhil.backend.repository.StudentRepository;
 import com.nikhil.backend.services.StudentService;
 
-import jakarta.validation.constraints.Null;
+import org.springframework.lang.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class StudentImplementation implements StudentService {
 
     @Autowired
     private StudentRepository studentRepository;
-    
+
+    private final ModelMapper modelMapper;
+
     @Override
     public ApiResponse<Void> savestudent(StudentDetailDTO entity) {
-
 
         Long grLong = Long.parseLong(entity.getGrNo());
         Long newRoll = getNextRollNo();
@@ -36,9 +42,9 @@ public class StudentImplementation implements StudentService {
 
         // Correct duplicate check
         if (existingStudent != null) {
-            return new ApiResponse<>(false, 
-                "Student with the same GR number already exists", 
-                null);
+            return new ApiResponse<>(false,
+                    "Student with the same GR number already exists",
+                    null);
         }
 
         Student student2 = new Student();
@@ -65,7 +71,7 @@ public class StudentImplementation implements StudentService {
 
         // SAVE STUDENT
         studentRepository.save(student2);
-    
+
         return new ApiResponse<>(true, "Student Details Saved", null);
     }
 
@@ -82,5 +88,17 @@ public class StudentImplementation implements StudentService {
     public long getNextRollNo() {
         Long lastRoll = studentRepository.findMaxRollNo();
         return (lastRoll == null) ? 1 : lastRoll + 1;
+    }
+
+
+    @Override
+    public ApiResponse<Page<FinalStudentDetailDTO>> getallsavedstudent(@NonNull Pageable pageable) {
+
+        Page<Student> studentPage = studentRepository.findAll(pageable);
+
+        Page<FinalStudentDetailDTO> dtoPage = studentPage.map(
+                student -> modelMapper.map(student, FinalStudentDetailDTO.class));
+
+        return new ApiResponse<>(true, "Student Details Saved", dtoPage);
     }
 }

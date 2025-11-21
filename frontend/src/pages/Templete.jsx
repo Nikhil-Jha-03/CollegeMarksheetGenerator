@@ -33,7 +33,7 @@ const Templete = ({student}) => {
     //     dateOfIssue: "18-10-2025"
     // };
     return (
-        <div className="w-[794px] min-h-[1123px] p-10 mx-auto bg-white text-gray-800 text-[14px] poppins">
+        <div className="w-[794px] min-h-[1123px] p-10 mx-auto bg-white text-gray-800 text-[14px] poppins table-fade">
 
 
             <div className='flex justify-center'>

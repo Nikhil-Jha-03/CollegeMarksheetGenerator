@@ -12,7 +12,7 @@ export default function NavBar() {
         <ul className="hidden md:flex gap-6 text-sm poppins-semibold">
           <NavLink to={"/"} className="hover:text-gray-300 cursor-pointer">Home</NavLink>
           <NavLink to={"/createmarksheet"} className="hover:text-gray-300 cursor-pointer">Create Mark Sheet</NavLink>
-          <NavLink to={"/allmarksheet"} className="hover:text-gray-300 cursor-pointer">All Marksheet</NavLink>
+          <NavLink to={"/allstudent"} className="hover:text-gray-300 cursor-pointer">All Marksheet</NavLink>
         </ul>
 
         {/* Mobile Menu Icon */}
