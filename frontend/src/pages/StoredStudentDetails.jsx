@@ -5,9 +5,11 @@ import { toast } from 'react-toastify';
 import { Trash, Loader2, CloudFog } from 'lucide-react';
 import Templete from './Templete'
 import Swal from "sweetalert2";;
+import { useNavigate } from 'react-router-dom';
 
 const StoredStudentDetails = () => {
 
+    const navigate = useNavigate()
     const [studentsData, setStudentsData] = useState([]);
     const [pageSize, setPageSize] = useState(5);
     const [page, setPage] = useState(0);
@@ -101,6 +103,76 @@ const StoredStudentDetails = () => {
             toast.error(error.response?.data?.message || "Delete failed");
         }
     };
+
+    const handleDownload = async (grNo) => {
+        const numericGrno = parseInt(grNo);
+
+        if (isNaN(numericGrno) || numericGrno <= 0) {
+            toast.error("Unable to delete");
+            return;
+        }
+        try {
+            const response = await api.get(`/api/student/pdf/${numericGrno}`, {
+                responseType: 'blob'
+            })
+
+            const blob = new Blob([response.data], { type: 'application/pdf' });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `Report_Card_${Date.now()}.pdf`;
+
+            document.body.appendChild(link);
+            link.click();
+
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+
+            console.log('PDF downloaded successfully');
+        } catch (error) {
+            console.log("Error", error)
+        }
+
+    }
+
+    const handleDownloadAll = async () => {
+        try {
+
+            const response = await api.get("/api/student/pdf/all", {
+                responseType: 'blob'
+            })
+
+            console.log(response);
+            const blob = new Blob([response.data], { type: 'application/zip' })
+            const url = window.URL.createObjectURL(blob);
+
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = "students_Details.zip";
+
+            document.body.appendChild(link);
+            link.click();
+
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+
+        } catch (error) {
+            console.log(error)
+            toast.error("Something went wrong")
+        }
+    }
+
+    const handleEdit = async (grNo) => {
+        const numericGrno = parseInt(grNo);
+
+        if (isNaN(numericGrno) || numericGrno <= 0) {
+            toast.error("Unable to delete");
+            return;
+        }
+
+        navigate(`/editstudent/${grNo}`)
+        return;
+    }
 
 
 
@@ -199,6 +271,14 @@ const StoredStudentDetails = () => {
                             <span>of</span>
                             <span className="font-semibold">{totalPages}</span>
                         </div>
+
+
+                        <div>
+                            <span onClick={handleDownloadAll}>
+                                <Button> Download All </Button>
+                            </span>
+                        </div>
+
                     </div>
                 </div>
 
@@ -252,6 +332,7 @@ const StoredStudentDetails = () => {
                                     <th className="border px-4 py-2">Preview</th>
                                     <th className="border px-4 py-2">Print</th>
                                     <th className="border px-4 py-2">Delete</th>
+                                    <th className="border px-4 py-2">Edit</th>
                                 </tr>
                             </thead>
 
@@ -282,7 +363,9 @@ const StoredStudentDetails = () => {
                                         </td>
 
                                         <td className="border px-4 py-2">
-                                            <span>
+                                            <span onClick={() => {
+                                                handleDownload(student.grNo || null)
+                                            }}>
 
                                                 <Button className="cursor-pointer" >Print</Button>
                                             </span>
@@ -294,6 +377,16 @@ const StoredStudentDetails = () => {
                                             }}>
                                                 <Button className="cursor-pointer" variant="destructive">
                                                     <Trash className="h-4 w-4 mr-1" /> Delete
+                                                </Button>
+                                            </span>
+                                        </td>
+
+                                        <td className="border px-4 py-2">
+                                            <span onClick={() => {
+                                                handleEdit(student.grNo || null)
+                                            }}>
+                                                <Button variant="secondary">
+                                                    Edit
                                                 </Button>
                                             </span>
                                         </td>

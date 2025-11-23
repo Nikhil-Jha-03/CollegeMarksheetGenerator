@@ -1,13 +1,18 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import Templete from './Templete';
 import api from '../api/axios';
 import { X } from 'lucide-react';
-import { toast } from 'react-toastify'
+import { toast } from 'react-toastify';
 
-const AddMarkSheetPage = () => {
+const MarkSheetFormPage = ({ mode = 'add' }) => {
+  const { studentId } = useParams(); // For edit mode
+  console.log("studentId", studentId)
+  const navigate = useNavigate();
   const [showTemplate, setShowTemplate] = useState(false);
   const [classDisplay, setClassDisplay] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(mode === 'edit');
   const [student, setStudent] = useState({
     name: "",
     motherName: "",
@@ -24,14 +29,16 @@ const AddMarkSheetPage = () => {
     dateOfIssue: new Date().toISOString().split('T')[0]
   });
 
+  const isEditMode = mode === 'edit';
+
   const toggleView = () => setShowTemplate(prev => !prev);
 
   const handleInputChange = (field, value) => {
     if (field === "studentClass") {
-      const id = parseInt(value)
-      const classText = classDisplay.find(item => item.classId == id)?.className
+      const id = parseInt(value);
+      const classText = classDisplay.find(item => item.classId == id)?.className;
       setStudent(prev => ({ ...prev, [field]: classText }));
-      return
+      return;
     }
     setStudent(prev => ({ ...prev, [field]: value }));
   };
@@ -45,18 +52,55 @@ const AddMarkSheetPage = () => {
       }
     } catch (error) {
       console.error("Error fetching classes:", error);
+      toast.error("Failed to fetch classes");
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchSubjects = async (classId) => {
+  const fetchStudentData = async () => {
+    if (!studentId) return;
+
     try {
-      setLoading(true);
+
+      const numericGrno = parseInt(studentId);
+
+      if (isNaN(numericGrno) || numericGrno <= 0) {
+        toast.error("Unable to delete");
+        return;
+      }
+
+      setInitialLoading(true);
+      const response = await api.get(`/student/getStudent/${numericGrno}`);
+      if (response?.status === 200) {
+        const studentData = response.data;
+        console.log(studentData)
+        // Format the date if it exists
+        if (studentData.dob) {
+          studentData.dob = new Date(studentData.dob).toISOString().split('T')[0];
+        }
+        if (studentData.dateOfIssue) {
+          studentData.dateOfIssue = new Date(studentData.dateOfIssue).toISOString().split('T')[0];
+        }
+        setStudent(studentData);
+      } else {
+        toast.error("Failed to fetch student data");
+        navigate('/allstudent'); // Redirect if student not found
+      }
+    } catch (error) {
+      console.error("Error fetching student data:", error);
+      toast.error("Failed to load student data");
+      // navigate('/allstudent');
+    } finally {
+      setInitialLoading(false);
+    }
+  };
+
+  const fetchSubjects = async (classId) => {
+    console.log(classId)
+    try {
       const response = await api.get(`defaultData/getsubjectinfo/${classId}`);
       if (response?.data && response.data.length > 0) {
-
-        console.log(response.data)
         const subjects = response.data.map(item => ({
           subjectName: item.subjectName,
           total: item.marksType === "MARKS" ? 100 : "GRADE",
@@ -68,8 +112,8 @@ const AddMarkSheetPage = () => {
       }
     } catch (error) {
       console.error("Error fetching subjects:", error);
+      toast.error("Failed to fetch subjects");
     } finally {
-      console.log(student.subjects)
       setLoading(false);
     }
   };
@@ -82,9 +126,13 @@ const AddMarkSheetPage = () => {
       setStudent(prev => ({
         ...prev,
         studentClass: selectedClass.className,
-        subjects: []
+        subjects: isEditMode ? prev.subjects : [] // Keep subjects in edit mode
       }));
-      fetchSubjects(classId);
+
+      // Only fetch new subjects if in add mode
+      if (!isEditMode) {
+        fetchSubjects(classId);
+      }
     }
   };
 
@@ -101,7 +149,7 @@ const AddMarkSheetPage = () => {
   const handleSubjectChange = (index, field, value) => {
     setStudent(prev => {
       const newSubjects = [...prev.subjects];
-      newSubjects[index][field] = value
+      newSubjects[index][field] = value;
       return { ...prev, subjects: newSubjects };
     });
   };
@@ -145,23 +193,46 @@ const AddMarkSheetPage = () => {
   }, [student.subjects]);
 
   const handleSave = async () => {
-    console.log(student)
     if (!student.name || !student.motherName || !student.studentClass || !student.dob || !student.grNo || !student.annualResult) {
-      alert("Please fill all required fields");
+      toast.error("Please fill all required fields");
       return;
     }
     if (student.subjects.length === 0) {
-      alert("Please add at least one subject");
+      toast.error("Please add at least one subject");
       return;
     }
 
-    const response = await api.post("/student/savestudent", student)
-    if (!response?.data?.success) {
-      return toast.error(response?.data?.message)
-    } else {
-      toast.success(response?.data?.message)
+    try {
+
+      const numericGrno = parseInt(studentId);
+
+      if (isNaN(numericGrno) || numericGrno <= 0) {
+        toast.error("Unable to delete");
+        return;
+      }
+
+      console.log(numericGrno)
+      console.log(student)
+
+      const endpoint = isEditMode
+        ? `/student/updatestudent/${numericGrno}`
+        : "/student/savestudent";
+
+      const method = isEditMode ? 'put' : 'post';
+
+      const response = await api[method](endpoint, student);
+
+      if (!response?.data?.success) {
+        toast.error(response?.data?.message || "Failed to save");
+        return;
+      }
+
+      toast.success(response?.data?.message || `Student ${isEditMode ? 'updated' : 'saved'} successfully`);
+      toggleView();
+    } catch (error) {
+      console.error("Error saving student:", error);
+      toast.error("An error occurred while saving");
     }
-    toggleView();
   };
 
   useEffect(() => {
@@ -170,9 +241,21 @@ const AddMarkSheetPage = () => {
 
   useEffect(() => {
     fetchClasses();
+    if (isEditMode) {
+      fetchStudentData();
+    }
   }, []);
 
-  // console.log(student.subjects)
+  if (initialLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-gray-800 mx-auto mb-4"></div>
+          <p className="text-lg text-gray-600">Loading student data...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (showTemplate) {
     return (
@@ -197,7 +280,9 @@ const AddMarkSheetPage = () => {
         {/* Header */}
         <div className="bg-white shadow-sm mb-6">
           <div className="bg-gray-800 text-white px-8 py-5">
-            <h1 className="text-2xl font-bold">Student Result Card Entry Form</h1>
+            <h1 className="text-2xl font-bold">
+              {isEditMode ? 'Edit' : 'Add'} Student Result Card Entry Form
+            </h1>
           </div>
         </div>
 
@@ -210,14 +295,12 @@ const AddMarkSheetPage = () => {
 
               <div>
                 <label className="block text-base font-semibold mb-2">For Annual Result *</label>
-
                 <select
                   value={student.annualResult}
                   onChange={(e) => handleInputChange("annualResult", e.target.value)}
                   className="w-full border-2 border-gray-300 px-4 py-3 text-base focus:border-gray-800 focus:outline-none"
                 >
                   <option value="" disabled>Select year range</option>
-
                   {Array.from({ length: 10 }).map((_, index) => {
                     const start = 2024 + index;
                     const end = start + 1;
@@ -256,6 +339,7 @@ const AddMarkSheetPage = () => {
               <div>
                 <label className="block text-base font-semibold mb-2">Class *</label>
                 <select
+                  value={classDisplay.find(c => c.className === student.studentClass)?.classId || ''}
                   onChange={(e) => handleClassChange(e.target.value)}
                   className="w-full border-2 border-gray-300 px-4 py-3 text-base focus:border-gray-800 focus:outline-none"
                   disabled={loading}
@@ -346,11 +430,11 @@ const AddMarkSheetPage = () => {
                       className="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100"
                     />
                     <span
-                      onClick={(e) => removeSubject(index)}
-                      className='cursor-pointer'><X /></span>
-                  </div>
-
-                  <div>
+                      onClick={() => removeSubject(index)}
+                      className='cursor-pointer'
+                    >
+                      <X />
+                    </span>
                   </div>
                 </div>
               ))}
@@ -404,7 +488,7 @@ const AddMarkSheetPage = () => {
               onClick={handleSave}
               className="flex-1 px-8 py-4 bg-gray-800 text-white font-bold text-lg hover:bg-gray-700"
             >
-              Save & Preview
+              {isEditMode ? 'Update' : 'Save'} & Preview
             </button>
             <button
               onClick={toggleView}
@@ -420,4 +504,4 @@ const AddMarkSheetPage = () => {
   );
 };
 
-export default AddMarkSheetPage;
+export default MarkSheetFormPage;

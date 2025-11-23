@@ -13,6 +13,7 @@ function App() {
           <Route index element={<LandingPage />} />
           <Route path="/createmarksheet"  element={<AddMarkSheetPage/>} />
           <Route path="/allstudent"  element={<StoredStudentDetails/>} />
+          <Route path="/editstudent/:studentId"  element={<AddMarkSheetPage mode='edit'/>} />
         </Route>
       </Routes>
   )
