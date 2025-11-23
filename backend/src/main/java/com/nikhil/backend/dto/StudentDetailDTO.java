@@ -15,6 +15,7 @@ import lombok.ToString;
 public class StudentDetailDTO {
     private String name;
     private String grNo;
+    private String annualResult;
     private String motherName;
     private String studentClass;
     private List<StudentSubjectDTO> subjects;

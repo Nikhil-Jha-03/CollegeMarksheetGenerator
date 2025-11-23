@@ -32,6 +32,8 @@ public class Student {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long studentId;
 
+    private String annualResult;
+
     private long rollNo;
 
     @Column(nullable = false)

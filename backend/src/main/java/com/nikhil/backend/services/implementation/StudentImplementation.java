@@ -10,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.nikhil.backend.dto.FinalStudentDetailDTO;
+import com.nikhil.backend.dto.PageResponse;
 import com.nikhil.backend.dto.StudentDetailDTO;
 import com.nikhil.backend.dto.StudentSubjectDTO;
 import com.nikhil.backend.entity.Student;
@@ -17,6 +18,8 @@ import com.nikhil.backend.entity.StudentSubject;
 import com.nikhil.backend.payload.ApiResponse;
 import com.nikhil.backend.repository.StudentRepository;
 import com.nikhil.backend.services.StudentService;
+
+import jakarta.transaction.Transactional;
 
 import org.springframework.lang.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -50,12 +53,13 @@ public class StudentImplementation implements StudentService {
         Student student2 = new Student();
         student2.setDateOfIssue(entity.getDateOfIssue());
         student2.setDob(entity.getDob());
+        student2.setAnnualResult(entity.getAnnualResult());
         student2.setGrNo(grLong);
         student2.setMotherName(entity.getMotherName());
         student2.setName(entity.getName());
         student2.setObtainedMarks(entity.getObtainedMarks());
         student2.setPercentage(entity.getPercentage());
-        student2.setResult(entity.getResult()); // FIXED
+        student2.setResult(entity.getResult());
         student2.setRollNo(newRoll);
         student2.setStudentClass(entity.getStudentClass());
         student2.setTotalMarks(entity.getTotalMarks());
@@ -90,15 +94,37 @@ public class StudentImplementation implements StudentService {
         return (lastRoll == null) ? 1 : lastRoll + 1;
     }
 
-
     @Override
-    public ApiResponse<Page<FinalStudentDetailDTO>> getallsavedstudent(@NonNull Pageable pageable) {
-
+    public ApiResponse<PageResponse<FinalStudentDetailDTO>> getallsavedstudent(@NonNull Pageable pageable) {
         Page<Student> studentPage = studentRepository.findAll(pageable);
 
         Page<FinalStudentDetailDTO> dtoPage = studentPage.map(
                 student -> modelMapper.map(student, FinalStudentDetailDTO.class));
 
-        return new ApiResponse<>(true, "Student Details Saved", dtoPage);
+        return new ApiResponse<>(true, "Student Details Saved", new PageResponse<>(
+            dtoPage.getContent(),
+            dtoPage.getNumber(),
+            dtoPage.getSize(),
+            dtoPage.getTotalElements(),
+            dtoPage.getTotalPages()
+        ));
     }
+
+    @Override
+    @Transactional
+    public ApiResponse<Void> deleteStudent(Long id) {
+        Student student = studentRepository.findByGrNo(id);
+
+         if (student == null) {
+        return new ApiResponse<>(false, "Student not found", null);
+    }
+
+        if (!studentRepository.existsById(student.getStudentId())) {
+            return new ApiResponse<>(true, "Invalid Student", null);
+        }
+
+        studentRepository.deleteById(student.getStudentId());
+        return new ApiResponse<>(true, "Deleted Student", null);
+    }
+
 }

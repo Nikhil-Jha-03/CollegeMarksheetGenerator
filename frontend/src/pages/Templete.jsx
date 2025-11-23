@@ -2,36 +2,7 @@ import React from 'react'
 import CollegeLogo from "../assets/CollegeLogo.png"
 
 const Templete = ({student}) => {
-
-    // const student = {
-    //     name: "Kumar Nishant",
-    //     motherName: "Nirmala Devi",
-    //     class: "11th Arts",
-    //     rollNo: "002",
-    //     dob: "11-12-1999",
-    //     grNo: "874",
-
-    //     subjects: [
-    //         { name: "ENGLISH", total: 100, obtained: 85 },
-    //         { name: "HINDI", total: 100, obtained: 74 },
-    //         { name: "POLITICAL SCIENCE", total: 100, obtained: 65 },
-    //         { name: "ECONOMICS", total: 100, obtained: 84 },
-    //         { name: "GEOGRAPHY", total: 100, obtained: 82 },
-    //         { name: "HISTORY", total: 100, obtained: 63 },
-    //         { name: "ENV. EDU. & WATER SECURITY:", total: "Grade", obtained: 'A' },
-    //         { name: "HEALTH & PHYSICAL EDUCATION:", total: "Grade", obtained: 'B' },
-    //     ],
-
-    //     envEdu: "Grade A",
-    //     healthEdu: "Grade B",
-
-    //     totalMarks: 600,
-    //     obtainedMarks: 453,
-    //     percentage: 75.5,
-    //     result: "Pass",
-    //     remark: "Promoted to Standard XII - Arts",
-    //     dateOfIssue: "18-10-2025"
-    // };
+console.log(student)
     return (
         <div className="w-[794px] min-h-[1123px] p-10 mx-auto bg-white text-gray-800 text-[14px] poppins table-fade">
 
@@ -51,7 +22,7 @@ const Templete = ({student}) => {
                 <p className="text-sm font-medium">Handewadi, Hadapsar, Pune</p>
 
                 <h2 className="mt-4 text-lg font-bold underline">
-                    ANNUAL RESULTS 2024 - 2025
+                    ANNUAL RESULTS {student.annualResult || 2024 - 2025 }
                 </h2>
             </div>
 

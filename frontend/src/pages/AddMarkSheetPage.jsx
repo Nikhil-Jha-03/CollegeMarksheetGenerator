@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Templete from './Templete';
 import api from '../api/axios';
 import { X } from 'lucide-react';
-import {toast} from 'react-toastify'
+import { toast } from 'react-toastify'
 
 const AddMarkSheetPage = () => {
   const [showTemplate, setShowTemplate] = useState(false);
@@ -11,6 +11,7 @@ const AddMarkSheetPage = () => {
   const [student, setStudent] = useState({
     name: "",
     motherName: "",
+    annualResult: "",
     studentClass: "",
     dob: "",
     grNo: "",
@@ -92,7 +93,7 @@ const AddMarkSheetPage = () => {
       ...prev,
       subjects: [
         ...prev.subjects,
-        { subjectName: "", total: 100, obtained: "", type: "MARKS", subjectCode:0 }
+        { subjectName: "", total: 100, obtained: "", type: "MARKS", subjectCode: 0 }
       ]
     }));
   };
@@ -145,7 +146,7 @@ const AddMarkSheetPage = () => {
 
   const handleSave = async () => {
     console.log(student)
-    if (!student.name || !student.motherName || !student.studentClass || !student.dob || !student.grNo) {
+    if (!student.name || !student.motherName || !student.studentClass || !student.dob || !student.grNo || !student.annualResult) {
       alert("Please fill all required fields");
       return;
     }
@@ -154,14 +155,12 @@ const AddMarkSheetPage = () => {
       return;
     }
 
-    const response = await api.post("/student/savestudent",student)
+    const response = await api.post("/student/savestudent", student)
     if (!response?.data?.success) {
       return toast.error(response?.data?.message)
-    }else{
+    } else {
       toast.success(response?.data?.message)
     }
-
-    console.log("response",response.data)
     toggleView();
   };
 
@@ -178,15 +177,15 @@ const AddMarkSheetPage = () => {
   if (showTemplate) {
     return (
       <div className='w-full bg-gray-50'>
-      <div className="min-h-screen w-fit m-auto bg-gray-50 p-6">
-        <button
-          onClick={toggleView}
-          className="mb-4 px-6 py-3 bg-gray-800 text-white text-base font-medium"
-        >
-          ← Back to Form
-        </button>
-        <Templete student={student} />
-      </div>
+        <div className="min-h-screen w-fit m-auto bg-gray-50 p-6">
+          <button
+            onClick={toggleView}
+            className="mb-4 px-6 py-3 bg-gray-800 text-white text-base font-medium"
+          >
+            ← Back to Form
+          </button>
+          <Templete student={student} />
+        </div>
       </div>
     );
   }
@@ -208,6 +207,30 @@ const AddMarkSheetPage = () => {
 
           <div className="space-y-5">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+              <div>
+                <label className="block text-base font-semibold mb-2">For Annual Result *</label>
+
+                <select
+                  value={student.annualResult}
+                  onChange={(e) => handleInputChange("annualResult", e.target.value)}
+                  className="w-full border-2 border-gray-300 px-4 py-3 text-base focus:border-gray-800 focus:outline-none"
+                >
+                  <option value="" disabled>Select year range</option>
+
+                  {Array.from({ length: 10 }).map((_, index) => {
+                    const start = 2024 + index;
+                    const end = start + 1;
+                    const label = `${start} - ${end}`;
+                    return (
+                      <option key={index} value={label}>
+                        {label}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+
               <div>
                 <label className="block text-base font-semibold mb-2">Student Name *</label>
                 <input
@@ -294,44 +317,44 @@ const AddMarkSheetPage = () => {
 
           {student.subjects.length > 0 ? (
             <div>
-                {student.subjects.map((sub, index) => (
-                  <div key={index} className="grid grid-cols-3 gap-4 mb-3">
-                    <div className='flex items-center'>
-                      <h1>{sub.subjectCode}</h1>
-                      <input
-                        type="text"
-                        value={sub?.subjectName}
-                        placeholder='Enter Subject Name'
-                        onChange={(e) => handleSubjectChange(index, 'subjectName', e.target.value)}
-                        className="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100 ml-2"
-                      />
-                    </div>
-                    <div>
-                      <input
-                        type="text"
-                        value={sub?.total}
-                        onChange={(e) => handleSubjectChange(index, 'total', e.target.value)}
-                        className="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100"
-                      />
-                    </div>
-                    <div className='flex items-center gap-2'>
-                      <input
-                        type="text"
-                        placeholder={sub?.total === "GRADE" ? "Enter Grade" : "MARKS"}
-                        value={sub?.obtained}
-                        onChange={(e) => handleSubjectChange(index, 'obtained', e.target.value)}
-                        className="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100"
-                      />
-                      <span
-                        onClick={(e) => removeSubject(index)}
-                        className='cursor-pointer'><X /></span>
-                    </div>
-
-                    <div>
-                    </div>
+              {student.subjects.map((sub, index) => (
+                <div key={index} className="grid grid-cols-3 gap-4 mb-3">
+                  <div className='flex items-center'>
+                    <h1>{sub.subjectCode}</h1>
+                    <input
+                      type="text"
+                      value={sub?.subjectName}
+                      placeholder='Enter Subject Name'
+                      onChange={(e) => handleSubjectChange(index, 'subjectName', e.target.value)}
+                      className="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100 ml-2"
+                    />
                   </div>
-                ))}
-              </div>
+                  <div>
+                    <input
+                      type="text"
+                      value={sub?.total}
+                      onChange={(e) => handleSubjectChange(index, 'total', e.target.value)}
+                      className="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100"
+                    />
+                  </div>
+                  <div className='flex items-center gap-2'>
+                    <input
+                      type="text"
+                      placeholder={sub?.total === "GRADE" ? "Enter Grade" : "MARKS"}
+                      value={sub?.obtained}
+                      onChange={(e) => handleSubjectChange(index, 'obtained', e.target.value)}
+                      className="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100"
+                    />
+                    <span
+                      onClick={(e) => removeSubject(index)}
+                      className='cursor-pointer'><X /></span>
+                  </div>
+
+                  <div>
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : (
             <div className="border-2 border-gray-300 p-12 text-center bg-gray-50">
               <p className="text-lg text-gray-600 mb-4">No subjects added yet</p>

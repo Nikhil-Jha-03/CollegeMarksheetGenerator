@@ -16,6 +16,7 @@ public class FinalStudentDetailDTO {
  private String name;
     private String grNo;
     private Long rollNo;
+    private String annualResult;
     private String motherName;
     private String studentClass;
     private List<StudentSubjectDTO> subjects;

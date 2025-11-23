@@ -2,8 +2,9 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import api from '../api/axios';
 import { toast } from 'react-toastify';
-import { Trash, Loader2 } from 'lucide-react';
-import Templete from './Templete';
+import { Trash, Loader2, CloudFog } from 'lucide-react';
+import Templete from './Templete'
+import Swal from "sweetalert2";;
 
 const StoredStudentDetails = () => {
 
@@ -11,6 +12,7 @@ const StoredStudentDetails = () => {
     const [pageSize, setPageSize] = useState(5);
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
+    const [totalElement, setTotalElement] = useState(0);
     const timeoutRef = useRef(null);
     const [loading, setLoading] = useState(true);
     const [preview, setPreview] = useState(false)
@@ -27,9 +29,11 @@ const StoredStudentDetails = () => {
                 `/student/getsavedstudent?page=${page}&size=${pageSize}`
             );
 
+            console.log(response)
             if (response?.data?.success) {
                 setStudentsData(response.data.data.content);
                 setTotalPages(response.data.data.totalPages);
+                setTotalElement(response.data.data.totalElements)
             }
 
         } catch (error) {
@@ -59,6 +63,47 @@ const StoredStudentDetails = () => {
         }
         return
     }
+
+
+    const handleDelete = async (grNo) => {
+        const numericGrno = parseInt(grNo);
+
+        if (isNaN(numericGrno) || numericGrno <= 0) {
+            toast.error("Unable to delete");
+            return;
+        }
+
+        const confirm = await Swal.fire({
+            title: "Are you sure?",
+            text: "This student will be permanently deleted",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Yes, delete",
+            cancelButtonText: "Cancel",
+            confirmButtonColor: "#d33"
+        });
+
+        if (!confirm.isConfirmed) return;
+
+
+        try {
+            const response = await api.get(`/student/delete/${numericGrno}`);
+
+            if (!response.data?.success) {
+                toast.error(response.data.message || "Something went wrong");
+                return;
+            }
+
+            toast.success("Student Deleted");
+            fetchStudentDetails();
+
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Delete failed");
+        }
+    };
+
+
+
 
     // ------------ DEBOUNCE FETCH -------------
     useEffect(() => {
@@ -102,8 +147,6 @@ const StoredStudentDetails = () => {
 
                         {/* Rows Input */}
 
-
-
                         <label
                             htmlFor="rows"
                             className="inline-flex items-center gap-2 text-sm font-medium text-gray-700"
@@ -115,7 +158,7 @@ const StoredStudentDetails = () => {
                                 name="rows"
                                 type="number"
                                 min={1}
-                                max={500}
+                                max={totalElement}
                                 value={pageSize}
                                 onChange={(e) => {
                                     let v = Number(e.target.value);
@@ -197,7 +240,7 @@ const StoredStudentDetails = () => {
 
 
                         </div>
-                        <table className="border-collapse border border-gray-300 mt-5 ">
+                        <table className="border-collapse border border-gray-300 mt-5 shadow-lg ">
                             <thead>
                                 <tr className="bg-gray-100">
                                     <th className="border px-4 py-2">GR No</th>
@@ -246,7 +289,9 @@ const StoredStudentDetails = () => {
                                         </td>
 
                                         <td className="border px-4 py-2">
-                                            <span>
+                                            <span onClick={() => {
+                                                handleDelete(student.grNo || null)
+                                            }}>
                                                 <Button className="cursor-pointer" variant="destructive">
                                                     <Trash className="h-4 w-4 mr-1" /> Delete
                                                 </Button>
