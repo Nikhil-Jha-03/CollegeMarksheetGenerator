@@ -1,7 +1,6 @@
 package com.nikhil.backend.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -20,6 +19,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PutMapping;
+
 
 @RestController
 @RequestMapping("/student")
@@ -31,15 +32,18 @@ public class StudentController {
 
     @PostMapping("/savestudent")
     public ResponseEntity<ApiResponse<Void>> postMethodName(@RequestBody StudentDetailDTO entity) {
+        System.out.println(entity);
         return ResponseEntity.ok().body(studentService.savestudent(entity));
     }
 
     @GetMapping("/getsavedstudent")
     public ResponseEntity<ApiResponse<PageResponse<FinalStudentDetailDTO>>> getStudentDetailWithPageable(
             @RequestParam(required = false, defaultValue = "0") int page,
-            @RequestParam(required = false, defaultValue = "5") int size) {
+            @RequestParam(required = false, defaultValue = "5") int size,
+            @RequestParam(required = false,defaultValue = "") String searchBy,
+            @RequestParam(required = false,defaultValue = "") String search) {
         return ResponseEntity.ok(
-                studentService.getallsavedstudent(PageRequest.of(page, size)));
+                studentService.getallsavedstudent(searchBy,search, PageRequest.of(page, size)));
     }
 
 
@@ -47,6 +51,16 @@ public class StudentController {
     public ResponseEntity<ApiResponse<Void>> deleteStudent(@PathVariable Long id) {
         return ResponseEntity.ok().body(studentService.deleteStudent(id));
     }
-    
 
+    @GetMapping("/getStudent/{allstudent}")
+    public ResponseEntity<FinalStudentDetailDTO> getMethodName(@PathVariable Long allstudent) {
+        return ResponseEntity.ok().body(studentService.getStudentByGrNo(allstudent));
+    }
+
+    @PutMapping("/updatestudent/{grno}")
+    public ResponseEntity<ApiResponse<Void>> updateStudent(@PathVariable Long grno, @RequestBody StudentDetailDTO entity) {
+        System.out.println(entity);
+        return ResponseEntity.ok().body(studentService.updateStudent(grno,entity));
+    }
+    
 }

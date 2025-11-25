@@ -14,7 +14,7 @@ import lombok.ToString;
 @ToString
 public class StudentDetailDTO {
     private String name;
-    private String grNo;
+    private Long grNo;
     private String annualResult;
     private String motherName;
     private String studentClass;
@@ -25,4 +25,5 @@ public class StudentDetailDTO {
     private String result;
     private long obtainedMarks;
     private double percentage;
+    private String remark;
 }

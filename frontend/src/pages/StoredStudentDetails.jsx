@@ -2,10 +2,11 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import api from '../api/axios';
 import { toast } from 'react-toastify';
-import { Trash, Loader2, CloudFog } from 'lucide-react';
+import { Trash, Loader2, CloudFog, X } from 'lucide-react';
 import Templete from './Templete'
 import Swal from "sweetalert2";;
 import { useNavigate } from 'react-router-dom';
+import * as XLSX from 'xlsx';
 
 const StoredStudentDetails = () => {
 
@@ -22,16 +23,25 @@ const StoredStudentDetails = () => {
     const [searchBy, setSearchBy] = useState('')
     const [search, setSearch] = useState('')
 
+
+    const allowedKeys = [
+        "name",
+        "motherName",
+        "studentClass",
+        "grNo",
+        "rollNo",
+        "result"
+    ];
+
     // ------------ FETCH DATA -------------
     const fetchStudentDetails = async () => {
         setLoading(true);
 
         try {
             const response = await api.get(
-                `/student/getsavedstudent?page=${page}&size=${pageSize}`
+                `/student/getsavedstudent?page=${page}&size=${pageSize}&searchBy=${searchBy}&search=${search}`
             );
 
-            console.log(response)
             if (response?.data?.success) {
                 setStudentsData(response.data.data.content);
                 setTotalPages(response.data.data.totalPages);
@@ -51,7 +61,6 @@ const StoredStudentDetails = () => {
     }
 
     const handlePreview = (grNo) => {
-        console.log(grNo)
         if (!grNo && grNo < 0) {
             toast.error("Unable to preview")
             return
@@ -128,9 +137,10 @@ const StoredStudentDetails = () => {
             document.body.removeChild(link);
             window.URL.revokeObjectURL(url);
 
-            console.log('PDF downloaded successfully');
+            toast.success("Result Downloaded")
         } catch (error) {
-            console.log("Error", error)
+            toast.error("Something went wrong")
+
         }
 
     }
@@ -142,7 +152,6 @@ const StoredStudentDetails = () => {
                 responseType: 'blob'
             })
 
-            console.log(response);
             const blob = new Blob([response.data], { type: 'application/zip' })
             const url = window.URL.createObjectURL(blob);
 
@@ -156,8 +165,9 @@ const StoredStudentDetails = () => {
             document.body.removeChild(link);
             window.URL.revokeObjectURL(url);
 
+            toast.success("Result Downloaded")
+
         } catch (error) {
-            console.log(error)
             toast.error("Something went wrong")
         }
     }
@@ -174,12 +184,99 @@ const StoredStudentDetails = () => {
         return;
     }
 
+    const downloadExcel = () => {
+    try {
+        // Get all unique subjects across all students
+        const allSubjects = new Set();
+        studentsData.forEach(student => {
+            student.subjects.forEach(sub => {
+                allSubjects.add(sub.subjectName);
+            });
+        });
+        
+        // Convert to sorted array for consistent column order
+        const subjectList = Array.from(allSubjects).sort();
 
+        // Flatten student data with individual subject columns
+        const flattened = studentsData.map((s) => {
+            const row = {
+                'Name': s.name,
+                'GR No': s.grNo,
+                'Roll No': s.rollNo,
+                'Annual Result': s.annualResult,
+                'Mother Name': s.motherName,
+                'Class': s.studentClass,
+                'DOB': s.dob,
+                'Date of Issue': s.dateOfIssue,
+            };
 
+            // Add each subject as a separate column
+            subjectList.forEach(subjectName => {
+                const subject = s.subjects.find(sub => sub.subjectName === subjectName);
+                if (subject) {
+                    // For graded subjects
+                    if (subject.total === "GRADE") {
+                        row[subjectName] = subject.obtained || "-";
+                    } else {
+                        // For marks-based subjects
+                        row[subjectName] = subject.obtained 
+                            ? `${subject.obtained}/${subject.total}` 
+                            : `-/${subject.total}`;
+                    }
+                } else {
+                    row[subjectName] = "-";
+                }
+            });
+
+            // Add summary fields at the end
+            row['Total Marks'] = s.totalMarks;
+            row['Obtained Marks'] = s.obtainedMarks;
+            row['Percentage'] = s.percentage ? `${s.percentage}%` : "0%";
+            row['Result'] = s.result;
+            row['Remark'] = s.remark || "-";
+
+            return row;
+        });
+
+        // Create worksheet from data
+        const worksheet = XLSX.utils.json_to_sheet(flattened);
+
+        // Auto-size columns (optional but recommended)
+        const maxWidth = 50;
+        const colWidths = [];
+        
+        // Get headers
+        const headers = Object.keys(flattened[0] || {});
+        
+        headers.forEach((header, i) => {
+            const maxLength = Math.max(
+                header.length,
+                ...flattened.map(row => String(row[header] || '').length)
+            );
+            colWidths[i] = { wch: Math.min(maxLength + 2, maxWidth) };
+        });
+        
+        worksheet['!cols'] = colWidths;
+
+        // Create workbook and add worksheet
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Student Records");
+
+        // Generate filename with current date
+        const fileName = `Student_Report_${new Date().toISOString().split('T')[0]}.xlsx`;
+
+        // Download file
+        XLSX.writeFile(workbook, fileName);
+
+        toast.success("Excel file downloaded successfully!");
+    } catch (error) {
+        console.error("Export error:", error);
+        toast.error("Failed to download Excel file. Please try again.");
+    }
+};
 
     // ------------ DEBOUNCE FETCH -------------
     useEffect(() => {
-        setLoading(true);
         clearTimeout(timeoutRef.current);
 
         timeoutRef.current = setTimeout(() => {
@@ -187,7 +284,7 @@ const StoredStudentDetails = () => {
         }, 600);
 
         return () => clearTimeout(timeoutRef.current);
-    }, [page, pageSize]);
+    }, [page, pageSize, search]);
 
 
     if (preview) {
@@ -272,12 +369,69 @@ const StoredStudentDetails = () => {
                             <span className="font-semibold">{totalPages}</span>
                         </div>
 
-
+                        {/* Download All */}
                         <div>
                             <span onClick={handleDownloadAll}>
                                 <Button> Download All </Button>
                             </span>
                         </div>
+
+                        {/* Excel Download */}
+                        <div>
+                            <span onClick={downloadExcel}>
+                                <Button> Excel Download </Button>
+                            </span>
+                        </div>
+
+                    </div>
+                </div>
+
+
+
+                {/* Search */}
+                <div className='w-5xl m-auto table-fade mt-14'>
+                    <div className='flex gap-2'>
+                        <label htmlFor="searchBy">
+
+                            <select
+                                onChange={(e) => setSearchBy(e.currentTarget.value)}
+                                defaultValue={searchBy}
+                                className='text-sm rounded-md border px-2 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-ring' name="grNo" id="searchBy">
+                                <option value=""> Select Search Type </option>
+                                {allowedKeys.map((key) => (
+                                    <option key={key} value={key}>
+                                        Search By {key}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
+
+                        <label
+                            htmlFor="search"
+                            className="inline-flex items-center gap-2 text-sm font-medium text-gray-700"
+                        >
+                            <input
+                                onChange={(e) => setSearch(e.target.value)}
+                                id="search"
+                                name="search"
+                                value={search}
+                                type="text"
+                                placeholder='Seacrch'
+                                className="w-sm text-sm rounded-md border px-2 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                            />
+                        </label>
+
+                        {search.trim() !== '' && (
+                            <div className='flex items-center table-fade'>
+                                <span
+                                    onClick={() => setSearch('')}
+                                >
+
+                                    <Button className="cursor-pointer"><X />Clear Search</Button>
+                                </span>
+
+                            </div>
+                        )}
 
                     </div>
                 </div>
@@ -291,35 +445,7 @@ const StoredStudentDetails = () => {
 
                 ) : studentsData.length > 0 ? (
 
-                    <div className='w-5xl m-auto table-fade mt-14'>
-                        <div className='flex gap-2'>
-                            <label htmlFor="searchBy">
-
-                                <select className='text-sm rounded-md border px-2 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-ring' name="grNo" id="searchBy">
-                                    {Object.keys(studentsData[0] || {}).map((key) => (
-                                        <option key={key} value={key}>
-                                            Search By {key}
-                                        </option>
-                                    ))}
-                                </select>
-                            </label>
-
-                            <label
-                                htmlFor="search"
-                                className="inline-flex items-center gap-2 text-sm font-medium text-gray-700"
-                            >
-                                <input
-                                    id="search"
-                                    name="search"
-                                    type="text"
-                                    placeholder='Seacrch'
-                                    className="w-sm text-sm rounded-md border px-2 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                                />
-                            </label>
-
-
-
-                        </div>
+                    <div className='w-5xl m-auto table-fade mt-9'>
                         <table className="border-collapse border border-gray-300 mt-5 shadow-lg ">
                             <thead>
                                 <tr className="bg-gray-100">
@@ -330,9 +456,9 @@ const StoredStudentDetails = () => {
                                     <th className="border px-4 py-2">Percentage</th>
                                     <th className="border px-4 py-2">Result</th>
                                     <th className="border px-4 py-2">Preview</th>
+                                    <th className="border px-4 py-2">Edit</th>
                                     <th className="border px-4 py-2">Print</th>
                                     <th className="border px-4 py-2">Delete</th>
-                                    <th className="border px-4 py-2">Edit</th>
                                 </tr>
                             </thead>
 
@@ -364,6 +490,16 @@ const StoredStudentDetails = () => {
 
                                         <td className="border px-4 py-2">
                                             <span onClick={() => {
+                                                handleEdit(student.grNo || null)
+                                            }}>
+                                                <Button variant="secondary">
+                                                    Edit
+                                                </Button>
+                                            </span>
+                                        </td>
+
+                                        <td className="border px-4 py-2">
+                                            <span onClick={() => {
                                                 handleDownload(student.grNo || null)
                                             }}>
 
@@ -381,15 +517,6 @@ const StoredStudentDetails = () => {
                                             </span>
                                         </td>
 
-                                        <td className="border px-4 py-2">
-                                            <span onClick={() => {
-                                                handleEdit(student.grNo || null)
-                                            }}>
-                                                <Button variant="secondary">
-                                                    Edit
-                                                </Button>
-                                            </span>
-                                        </td>
                                     </tr>
                                 ))}
                             </tbody>

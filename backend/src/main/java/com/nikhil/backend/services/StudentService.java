@@ -1,5 +1,7 @@
 package com.nikhil.backend.services;
 
+import java.util.List;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.lang.NonNull;
 
@@ -14,9 +16,13 @@ public interface StudentService {
 
     ApiResponse<Void> savestudent(StudentDetailDTO entity);
 
-    // ApiResponse<List<FinalStudentDetailDTO>> getallsavedstudent();
-    ApiResponse<PageResponse<FinalStudentDetailDTO>> getallsavedstudent(@NonNull Pageable pageable);
+    ApiResponse<PageResponse<FinalStudentDetailDTO>> getallsavedstudent(String searchBy,String search,@NonNull Pageable pageable);
 
     ApiResponse<Void> deleteStudent(Long id);
+    List<FinalStudentDetailDTO> getAllStudent();
+
+    FinalStudentDetailDTO getStudentByGrNo(Long grNo);
+
+    ApiResponse<Void> updateStudent(Long grno, StudentDetailDTO entity);
 
 }

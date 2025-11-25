@@ -56,6 +56,7 @@ public class Student {
 
     private double percentage;
     private String result;
+    private String remark;
 
     @OneToMany(mappedBy = "student", cascade = CascadeType.ALL,orphanRemoval = true)
     private List<StudentSubject> subjects;

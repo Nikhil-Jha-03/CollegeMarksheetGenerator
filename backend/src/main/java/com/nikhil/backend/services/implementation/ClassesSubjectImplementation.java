@@ -1,9 +1,6 @@
 package com.nikhil.backend.services.implementation;
 
 import java.util.List;
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.system.SystemProperties;
 import org.springframework.stereotype.Service;
 
 import com.nikhil.backend.dto.ClassesDTO;
@@ -24,8 +21,7 @@ public class ClassesSubjectImplementation implements ClassesSubjectService {
 
     private final ClassesRepository classesRepository;
     private final SubjectRepository subjectRepository;
-    @Autowired
-    private ModelMapper modelMapper;
+
 
     @Override
     public List<ClassesDTO> getclassesinfo() {

@@ -24,6 +24,7 @@ public class FinalStudentDetailDTO {
     private LocalDate dob;
     private long totalMarks;
     private String result;
+    private String remark;
     private long obtainedMarks;
     private double percentage;
 }

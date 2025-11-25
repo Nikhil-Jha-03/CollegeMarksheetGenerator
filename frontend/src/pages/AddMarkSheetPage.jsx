@@ -6,8 +6,7 @@ import { X } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 const MarkSheetFormPage = ({ mode = 'add' }) => {
-  const { studentId } = useParams(); // For edit mode
-  console.log("studentId", studentId)
+  const { studentId } = useParams();
   const navigate = useNavigate();
   const [showTemplate, setShowTemplate] = useState(false);
   const [classDisplay, setClassDisplay] = useState([]);
@@ -51,7 +50,6 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
         setClassDisplay(response.data);
       }
     } catch (error) {
-      console.error("Error fetching classes:", error);
       toast.error("Failed to fetch classes");
     } finally {
       setLoading(false);
@@ -74,7 +72,6 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
       const response = await api.get(`/student/getStudent/${numericGrno}`);
       if (response?.status === 200) {
         const studentData = response.data;
-        console.log(studentData)
         // Format the date if it exists
         if (studentData.dob) {
           studentData.dob = new Date(studentData.dob).toISOString().split('T')[0];
@@ -88,7 +85,6 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
         navigate('/allstudent'); // Redirect if student not found
       }
     } catch (error) {
-      console.error("Error fetching student data:", error);
       toast.error("Failed to load student data");
       // navigate('/allstudent');
     } finally {
@@ -97,7 +93,6 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
   };
 
   const fetchSubjects = async (classId) => {
-    console.log(classId)
     try {
       const response = await api.get(`defaultData/getsubjectinfo/${classId}`);
       if (response?.data && response.data.length > 0) {
@@ -111,7 +106,6 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
         setStudent(prev => ({ ...prev, subjects }));
       }
     } catch (error) {
-      console.error("Error fetching subjects:", error);
       toast.error("Failed to fetch subjects");
     } finally {
       setLoading(false);
@@ -180,7 +174,7 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
 
     const percentage = total > 0 ? (obtained / total) * 100 : 0;
     const result = isFail ? "Fail" : "Pass";
-    const remark = isFail ? "Failed" : "Pass and Promoted to Standard XII";
+    const remark = isFail ? "Failed and not eligible for promotion to Standard XII" : "Failed and not eligible for promotion to Standard XII";
 
     setStudent(prev => ({
       ...prev,
@@ -203,16 +197,16 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
     }
 
     try {
+      if (isEditMode) {
+        const numericGrno = parseInt(studentId);
 
-      const numericGrno = parseInt(studentId);
-
-      if (isNaN(numericGrno) || numericGrno <= 0) {
-        toast.error("Unable to delete");
-        return;
+        if (isNaN(numericGrno) || numericGrno <= 0) {
+          toast.error("Unable to delete");
+          return;
+        }
       }
 
-      console.log(numericGrno)
-      console.log(student)
+
 
       const endpoint = isEditMode
         ? `/student/updatestudent/${numericGrno}`
@@ -228,9 +222,23 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
       }
 
       toast.success(response?.data?.message || `Student ${isEditMode ? 'updated' : 'saved'} successfully`);
-      toggleView();
+      // toggleView();
+      setStudent({
+      name: "",
+      motherName: "",
+      annualResult: "",
+      studentClass: "",
+      dob: "",
+      grNo: "",
+      subjects: [],
+      totalMarks: 0,
+      obtainedMarks: 0,
+      percentage: 0,
+      result: "",
+      remark: "",
+      dateOfIssue: new Date().toISOString().split('T')[0]
+    });
     } catch (error) {
-      console.error("Error saving student:", error);
       toast.error("An error occurred while saving");
     }
   };
