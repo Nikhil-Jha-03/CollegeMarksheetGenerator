@@ -174,7 +174,7 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
 
     const percentage = total > 0 ? (obtained / total) * 100 : 0;
     const result = isFail ? "Fail" : "Pass";
-    const remark = isFail ? "Failed and not eligible for promotion to Standard XII" : "Failed and not eligible for promotion to Standard XII";
+    const remark = isFail ? "Failed and not eligible for promotion to Standard XII" : "Passed and Promoted to Standard XII";
 
     setStudent(prev => ({
       ...prev,
@@ -197,19 +197,16 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
     }
 
     try {
-      if (isEditMode) {
-        const numericGrno = parseInt(studentId);
 
-        if (isNaN(numericGrno) || numericGrno <= 0) {
-          toast.error("Unable to delete");
-          return;
-        }
-      }
+        // const numericGrno = parseInt(studentId);
 
-
-
+        // if (isNaN(numericGrno) || numericGrno <= 0) {
+        //   toast.error("Unable to delete");
+        //   return;
+        // }
+    
       const endpoint = isEditMode
-        ? `/student/updatestudent/${numericGrno}`
+        ? `/student/updatestudent/${studentId}`
         : "/student/savestudent";
 
       const method = isEditMode ? 'put' : 'post';

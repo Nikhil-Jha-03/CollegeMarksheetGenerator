@@ -4,6 +4,7 @@ import AddMarkSheetPage from './pages/AddMarkSheetPage'
 import Layout from './components/Layout'
 import Templete from './pages/Templete'
 import StoredStudentDetails from './pages/StoredStudentDetails'
+import LoginPage from './pages/LoginPage'
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
           <Route path="/createmarksheet"  element={<AddMarkSheetPage/>} />
           <Route path="/allstudent"  element={<StoredStudentDetails/>} />
           <Route path="/editstudent/:studentId"  element={<AddMarkSheetPage mode='edit'/>} />
+          <Route path="/login"  element={<LoginPage />} />
         </Route>
       </Routes>
   )

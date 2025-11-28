@@ -309,7 +309,7 @@ const StoredStudentDetails = () => {
             <div className="overflow-x-auto min-h-screen poppins">
 
                 {/* TOP BAR */}
-                <div className='w-5xl m-auto mt-10 flex justify-between items-center'>
+                <div className='w-5xl m-auto mt-10 flex justify-between items-center'> 
                     <h1 className='text-xl font-semibold'>Student Details</h1>
 
                     <div className='flex items-center gap-4'>
@@ -537,7 +537,3 @@ const StoredStudentDetails = () => {
 };
 
 export default StoredStudentDetails;
-
-
-// implement search functionality and add ANNUAL RESULTS 2024 - 2025 this
-// And change the pagable type for no warning
