@@ -22,40 +22,36 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .cors(cors -> cors.configurationSource(request -> {
-                CorsConfiguration cfg = new CorsConfiguration();
-                cfg.addAllowedOrigin("http://localhost:3000");
-                cfg.addAllowedHeader("*");
-                cfg.addAllowedMethod("*");
-                cfg.setAllowCredentials(true);
-                return cfg;
-            }))
-            .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/login", "/api/public").permitAll()
-                .anyRequest().authenticated()
-            )
-            .oauth2Login(oauth2 -> oauth2
-                .userInfoEndpoint(userInfo -> 
-                    userInfo.oidcUserService(customOidcUserService)
-                )
-                .defaultSuccessUrl("http://localhost:3000/dashboard", true)
-            )
-            .logout(logout -> logout
-                .logoutUrl("/logout")
-                .logoutSuccessUrl("/logout-success")
-                .invalidateHttpSession(true)
-                .clearAuthentication(true)
-                .deleteCookies("JSESSIONID")
-            )
-            .exceptionHandling(ex -> ex
-                .authenticationEntryPoint((req, res, e) -> 
-                    res.sendError(HttpServletResponse.SC_UNAUTHORIZED)
-                )
-                .accessDeniedHandler((req, res, e) -> 
-                    res.sendError(HttpServletResponse.SC_FORBIDDEN)
-                )
-            );
+                .cors(cors -> cors.configurationSource(request -> {
+                    CorsConfiguration cfg = new CorsConfiguration();
+                    cfg.addAllowedOrigin("http://localhost:5173");
+                    cfg.addAllowedHeader("*");
+                    cfg.addAllowedMethod("*");
+                    cfg.setAllowCredentials(true);
+                    return cfg;
+                }))
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/", "/login", "/api/user", "/login",
+                                "/oauth2/**",
+                                "/login/oauth2/**")
+                        .permitAll()
+                        .anyRequest().authenticated())
+                .oauth2Login(oauth2 -> oauth2
+                        .userInfoEndpoint(userInfo -> userInfo.oidcUserService(customOidcUserService))
+                        .defaultSuccessUrl("http://localhost:5173", true))
+                .logout(logout -> logout
+                        .logoutSuccessHandler((request, response, authentication) -> {
+                            response.setStatus(HttpServletResponse.SC_OK);
+                            response.setContentType("application/json");
+                            response.getWriter().write("{\"message\": \"Logged out\"}");
+                        })
+                        .invalidateHttpSession(true)
+                        .clearAuthentication(true)
+                        .deleteCookies("JSESSIONID"))
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((req, res, e) -> res.sendError(HttpServletResponse.SC_UNAUTHORIZED))
+                        .accessDeniedHandler((req, res, e) -> res.sendError(HttpServletResponse.SC_FORBIDDEN)));
 
         return http.build();
     }

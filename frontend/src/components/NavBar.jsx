@@ -1,18 +1,27 @@
 import { NavLink } from "react-router-dom";
+import useAuth from "../hooks/useAuth";
+import LogoutButton from "./Logout";
 
 export default function NavBar() {
+  const { isAuthenticated, user } = useAuth();
   return (
     <nav className="bg-gray-900 text-white px-6 py-4 ">
       <div className="max-w-6xl mx-auto flex items-center justify-between">
-        
+
         {/* Logo */}
         <h1 className="text-xl font-bold poppins-black">MarkSheet</h1>
 
         {/* Menu */}
-        <ul className="hidden md:flex gap-6 text-sm poppins-semibold">
+        <ul className="hidden md:flex gap-6 text-sm poppins-semibold  items-center">
           <NavLink to={"/"} className="hover:text-gray-300 cursor-pointer">Home</NavLink>
           <NavLink to={"/createmarksheet"} className="hover:text-gray-300 cursor-pointer">Create Mark Sheet</NavLink>
           <NavLink to={"/allstudent"} className="hover:text-gray-300 cursor-pointer">All Marksheet</NavLink>
+          {isAuthenticated && (
+            <>
+              <p>Welcome, {user?.name} </p>
+              <LogoutButton />
+            </>
+          )}
         </ul>
 
         {/* Mobile Menu Icon */}

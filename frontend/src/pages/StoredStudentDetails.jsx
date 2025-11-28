@@ -38,9 +38,7 @@ const StoredStudentDetails = () => {
         setLoading(true);
 
         try {
-            const response = await api.get(
-                `/student/getsavedstudent?page=${page}&size=${pageSize}&searchBy=${searchBy}&search=${search}`
-            );
+            const response = await api.get(`/student/getsavedstudent?page=${page}&size=${pageSize}&searchBy=${searchBy}&search=${search}`,{withCredentials:true});
 
             if (response?.data?.success) {
                 setStudentsData(response.data.data.content);
@@ -98,7 +96,7 @@ const StoredStudentDetails = () => {
 
 
         try {
-            const response = await api.get(`/student/delete/${numericGrno}`);
+            const response = await api.get(`/student/delete/${numericGrno}`,{withCredentials:true});
 
             if (!response.data?.success) {
                 toast.error(response.data.message || "Something went wrong");
@@ -123,7 +121,7 @@ const StoredStudentDetails = () => {
         try {
             const response = await api.get(`/api/student/pdf/${numericGrno}`, {
                 responseType: 'blob'
-            })
+            },{withCredentials:true});
 
             const blob = new Blob([response.data], { type: 'application/pdf' });
             const url = window.URL.createObjectURL(blob);
@@ -150,7 +148,7 @@ const StoredStudentDetails = () => {
 
             const response = await api.get("/api/student/pdf/all", {
                 responseType: 'blob'
-            })
+            },{withCredentials:true});
 
             const blob = new Blob([response.data], { type: 'application/zip' })
             const url = window.URL.createObjectURL(blob);

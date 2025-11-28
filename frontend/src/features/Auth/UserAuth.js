@@ -1,32 +1,35 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
-
+import axios from 'axios'
 
 const initialState = {
-  isAuthenticated: false,
-  user: null,
-  loadong: false,
-  error: null,
+    isAuthenticated: false,
+    user: null,
+    loading: false,
+    error: null,
 }
 
-const userAuthReducer = createAsyncThunk('userAuth/fetchUserAuth', async () => {
-  const response = await fetch('http://localhost:8080/api/auth/user', {
-    method: 'GET',
-    credentials: 'include',
-  })
-    if (!response.ok) {
-        throw new Error('Failed to fetch user authentication data')
+export const userAuthReducer = createAsyncThunk(
+    'userAuth/fetchUserAuth',
+    async (_, { rejectWithValue }) => {
+        try {
+            const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}api/user`, {
+                withCredentials: true,
+            });
+
+            return res.data.data;
+        } catch (err) {
+            return rejectWithValue(err.response?.data || 'Failed to fetch user')
+        }
     }
-    const data = await response.json()
-    return data
-})
+)
 
 const userAuthSlice = createSlice({
-  name: 'userAuth',
-  initialState,
+    name: 'userAuth',
+    initialState,
     reducers: {},
     extraReducers: (builder) => {
         builder
-            .addCase(userAuthReducer.pending, (state) => {GIT 
+            .addCase(userAuthReducer.pending, (state) => {
                 state.loading = true
                 state.error = null
             })
@@ -39,11 +42,9 @@ const userAuthSlice = createSlice({
                 state.loading = false
                 state.isAuthenticated = false
                 state.user = null
-                state.error = action.error.message
+                state.error = action.payload
             })
     },
 })
 
-export const {} = userAuthSlice.actions
-export { userAuthReducer }
 export default userAuthSlice.reducer
