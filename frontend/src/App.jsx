@@ -10,6 +10,8 @@ import { useEffect } from 'react'
 import { userAuthReducer } from './features/Auth/UserAuth'
 import useAuth from './hooks/useAuth.js'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
+import { Loader2 } from 'lucide-react'
+
 
 function App() {
 
@@ -23,7 +25,9 @@ function App() {
 
   // While loading, do NOT return login page yet
   if (loading) {
-    return <div>Loading...</div>;
+    return <div className="min-h-screen flex items-center justify-center">
+      <Loader2 className="animate-spin w-10 h-10 text-gray-600" />
+    </div>
   }
 
   // After loading is done:
@@ -55,3 +59,7 @@ function App() {
 
 
 export default App
+
+
+// work on main page design
+// use try catch in backend

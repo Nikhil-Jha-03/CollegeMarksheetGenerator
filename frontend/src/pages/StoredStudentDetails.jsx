@@ -38,7 +38,7 @@ const StoredStudentDetails = () => {
         setLoading(true);
 
         try {
-            const response = await api.get(`/student/getsavedstudent?page=${page}&size=${pageSize}&searchBy=${searchBy}&search=${search}`,{withCredentials:true});
+            const response = await api.get(`/student/getsavedstudent?page=${page}&size=${pageSize}&searchBy=${searchBy}&search=${search}`, { withCredentials: true });
 
             if (response?.data?.success) {
                 setStudentsData(response.data.data.content);
@@ -96,7 +96,7 @@ const StoredStudentDetails = () => {
 
 
         try {
-            const response = await api.get(`/student/delete/${numericGrno}`,{withCredentials:true});
+            const response = await api.get(`/student/delete/${numericGrno}`, { withCredentials: true });
 
             if (!response.data?.success) {
                 toast.error(response.data.message || "Something went wrong");
@@ -120,8 +120,10 @@ const StoredStudentDetails = () => {
         }
         try {
             const response = await api.get(`/api/student/pdf/${numericGrno}`, {
-                responseType: 'blob'
-            },{withCredentials:true});
+                responseType: 'blob',
+                withCredentials: true
+
+            });
 
             const blob = new Blob([response.data], { type: 'application/pdf' });
             const url = window.URL.createObjectURL(blob);
@@ -147,8 +149,9 @@ const StoredStudentDetails = () => {
         try {
 
             const response = await api.get("/api/student/pdf/all", {
-                responseType: 'blob'
-            },{withCredentials:true});
+                responseType: 'blob',
+                withCredentials: true
+            });
 
             const blob = new Blob([response.data], { type: 'application/zip' })
             const url = window.URL.createObjectURL(blob);
@@ -183,95 +186,95 @@ const StoredStudentDetails = () => {
     }
 
     const downloadExcel = () => {
-    try {
-        // Get all unique subjects across all students
-        const allSubjects = new Set();
-        studentsData.forEach(student => {
-            student.subjects.forEach(sub => {
-                allSubjects.add(sub.subjectName);
+        try {
+            // Get all unique subjects across all students
+            const allSubjects = new Set();
+            studentsData.forEach(student => {
+                student.subjects.forEach(sub => {
+                    allSubjects.add(sub.subjectName);
+                });
             });
-        });
-        
-        // Convert to sorted array for consistent column order
-        const subjectList = Array.from(allSubjects).sort();
 
-        // Flatten student data with individual subject columns
-        const flattened = studentsData.map((s) => {
-            const row = {
-                'Name': s.name,
-                'GR No': s.grNo,
-                'Roll No': s.rollNo,
-                'Annual Result': s.annualResult,
-                'Mother Name': s.motherName,
-                'Class': s.studentClass,
-                'DOB': s.dob,
-                'Date of Issue': s.dateOfIssue,
-            };
+            // Convert to sorted array for consistent column order
+            const subjectList = Array.from(allSubjects).sort();
 
-            // Add each subject as a separate column
-            subjectList.forEach(subjectName => {
-                const subject = s.subjects.find(sub => sub.subjectName === subjectName);
-                if (subject) {
-                    // For graded subjects
-                    if (subject.total === "GRADE") {
-                        row[subjectName] = subject.obtained || "-";
+            // Flatten student data with individual subject columns
+            const flattened = studentsData.map((s) => {
+                const row = {
+                    'Name': s.name,
+                    'GR No': s.grNo,
+                    'Roll No': s.rollNo,
+                    'Annual Result': s.annualResult,
+                    'Mother Name': s.motherName,
+                    'Class': s.studentClass,
+                    'DOB': s.dob,
+                    'Date of Issue': s.dateOfIssue,
+                };
+
+                // Add each subject as a separate column
+                subjectList.forEach(subjectName => {
+                    const subject = s.subjects.find(sub => sub.subjectName === subjectName);
+                    if (subject) {
+                        // For graded subjects
+                        if (subject.total === "GRADE") {
+                            row[subjectName] = subject.obtained || "-";
+                        } else {
+                            // For marks-based subjects
+                            row[subjectName] = subject.obtained
+                                ? `${subject.obtained}/${subject.total}`
+                                : `-/${subject.total}`;
+                        }
                     } else {
-                        // For marks-based subjects
-                        row[subjectName] = subject.obtained 
-                            ? `${subject.obtained}/${subject.total}` 
-                            : `-/${subject.total}`;
+                        row[subjectName] = "-";
                     }
-                } else {
-                    row[subjectName] = "-";
-                }
+                });
+
+                // Add summary fields at the end
+                row['Total Marks'] = s.totalMarks;
+                row['Obtained Marks'] = s.obtainedMarks;
+                row['Percentage'] = s.percentage ? `${s.percentage}%` : "0%";
+                row['Result'] = s.result;
+                row['Remark'] = s.remark || "-";
+
+                return row;
             });
 
-            // Add summary fields at the end
-            row['Total Marks'] = s.totalMarks;
-            row['Obtained Marks'] = s.obtainedMarks;
-            row['Percentage'] = s.percentage ? `${s.percentage}%` : "0%";
-            row['Result'] = s.result;
-            row['Remark'] = s.remark || "-";
+            // Create worksheet from data
+            const worksheet = XLSX.utils.json_to_sheet(flattened);
 
-            return row;
-        });
+            // Auto-size columns (optional but recommended)
+            const maxWidth = 50;
+            const colWidths = [];
 
-        // Create worksheet from data
-        const worksheet = XLSX.utils.json_to_sheet(flattened);
+            // Get headers
+            const headers = Object.keys(flattened[0] || {});
 
-        // Auto-size columns (optional but recommended)
-        const maxWidth = 50;
-        const colWidths = [];
-        
-        // Get headers
-        const headers = Object.keys(flattened[0] || {});
-        
-        headers.forEach((header, i) => {
-            const maxLength = Math.max(
-                header.length,
-                ...flattened.map(row => String(row[header] || '').length)
-            );
-            colWidths[i] = { wch: Math.min(maxLength + 2, maxWidth) };
-        });
-        
-        worksheet['!cols'] = colWidths;
+            headers.forEach((header, i) => {
+                const maxLength = Math.max(
+                    header.length,
+                    ...flattened.map(row => String(row[header] || '').length)
+                );
+                colWidths[i] = { wch: Math.min(maxLength + 2, maxWidth) };
+            });
 
-        // Create workbook and add worksheet
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Student Records");
+            worksheet['!cols'] = colWidths;
 
-        // Generate filename with current date
-        const fileName = `Student_Report_${new Date().toISOString().split('T')[0]}.xlsx`;
+            // Create workbook and add worksheet
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Student Records");
 
-        // Download file
-        XLSX.writeFile(workbook, fileName);
+            // Generate filename with current date
+            const fileName = `Student_Report_${new Date().toISOString().split('T')[0]}.xlsx`;
 
-        toast.success("Excel file downloaded successfully!");
-    } catch (error) {
-        console.error("Export error:", error);
-        toast.error("Failed to download Excel file. Please try again.");
-    }
-};
+            // Download file
+            XLSX.writeFile(workbook, fileName);
+
+            toast.success("Excel file downloaded successfully!");
+        } catch (error) {
+            console.error("Export error:", error);
+            toast.error("Failed to download Excel file. Please try again.");
+        }
+    };
 
     // ------------ DEBOUNCE FETCH -------------
     useEffect(() => {
@@ -307,10 +310,13 @@ const StoredStudentDetails = () => {
             <div className="overflow-x-auto min-h-screen poppins">
 
                 {/* TOP BAR */}
-                <div className='w-5xl m-auto mt-10 flex justify-between items-center'> 
-                    <h1 className='text-xl font-semibold'>Student Details</h1>
+                <div className='w-7xl m-auto mt-5 items-center'>
+                    <h1 className='text-3xl font-bold text-gray-900 mb-1'>Student Details</h1>
+                    <p className="text-gray-600 text-sm">Manage and view all student marksheets</p>
+                </div>
 
-                    <div className='flex items-center gap-4'>
+                <div className='w-7xl m-auto mt-7 flex '>
+                    <div className='w-full flex items-center gap-4 justify-between'>
 
                         {/* Rows Input */}
 
@@ -340,54 +346,38 @@ const StoredStudentDetails = () => {
                             />
                         </label>
 
-                        {/* Pagination Buttons */}
-                        <div className='flex gap-3'>
-                            <Button
-                                variant="outline"
-                                disabled={page <= 0}
-                                onClick={() => setPage(page - 1)}
-                            >
-                                Previous
-                            </Button>
 
-                            <Button
-                                variant="outline"
-                                disabled={page >= totalPages - 1}
-                                onClick={() => setPage(page + 1)}
-                            >
-                                Next
-                            </Button>
+
+
+                        <div className='flex gap-4'>
+                            {/* Page Info */}
+                            <div className='flex gap-2 items-center text-sm'>
+                                <span>Page</span>
+                                <span className="font-semibold">{page + 1}</span>
+                                <span>of</span>
+                                <span className="font-semibold">{totalPages}</span>
+                            </div>
+                            {/* Download All */}
+                            <div>
+                                <span onClick={handleDownloadAll}>
+                                    <Button> Download All </Button>
+                                </span>
+                            </div>
+
+                            {/* Excel Download */}
+                            <div>
+                                <span onClick={downloadExcel}>
+                                    <Button> Excel Download </Button>
+                                </span>
+                            </div>
                         </div>
 
-                        {/* Page Info */}
-                        <div className='flex gap-2 items-center text-sm'>
-                            <span>Page</span>
-                            <span className="font-semibold">{page + 1}</span>
-                            <span>of</span>
-                            <span className="font-semibold">{totalPages}</span>
-                        </div>
-
-                        {/* Download All */}
-                        <div>
-                            <span onClick={handleDownloadAll}>
-                                <Button> Download All </Button>
-                            </span>
-                        </div>
-
-                        {/* Excel Download */}
-                        <div>
-                            <span onClick={downloadExcel}>
-                                <Button> Excel Download </Button>
-                            </span>
-                        </div>
 
                     </div>
                 </div>
 
-
-
                 {/* Search */}
-                <div className='w-5xl m-auto table-fade mt-14'>
+                <div className='w-7xl m-auto table-fade mt-8'>
                     <div className='flex gap-2'>
                         <label htmlFor="searchBy">
 
@@ -443,35 +433,43 @@ const StoredStudentDetails = () => {
 
                 ) : studentsData.length > 0 ? (
 
-                    <div className='w-5xl m-auto table-fade mt-9'>
+
+                    <div className='w-7xl m-auto table-fade mt-9'>
                         <table className="border-collapse border border-gray-300 mt-5 shadow-lg ">
-                            <thead>
-                                <tr className="bg-gray-100">
-                                    <th className="border px-4 py-2">GR No</th>
-                                    <th className="border px-4 py-2">Name</th>
-                                    <th className="border px-4 py-2">Mother's Name</th>
-                                    <th className="border px-4 py-2">Class</th>
-                                    <th className="border px-4 py-2">Percentage</th>
-                                    <th className="border px-4 py-2">Result</th>
-                                    <th className="border px-4 py-2">Preview</th>
-                                    <th className="border px-4 py-2">Edit</th>
-                                    <th className="border px-4 py-2">Print</th>
-                                    <th className="border px-4 py-2">Delete</th>
-                                </tr>
-                            </thead>
+                            <tr className="bg-linear-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">GR No</th>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Name</th>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Mother's Name</th>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Class</th>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Percentage</th>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Result</th>
+                                <th className="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Preview</th>
+                                <th className="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Edit</th>
+                                <th className="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Print</th>
+                                <th className="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Delete</th>
+                            </tr>
 
                             <tbody>
                                 {studentsData.map((student, index) => (
                                     <tr key={index} className="hover:bg-gray-50">
-                                        <td className="border px-4 py-2">{student.grNo}</td>
-                                        <td className="border px-4 py-2">{student.name}</td>
-                                        <td className="border px-4 py-2">{student.motherName}</td>
-                                        <td className="border px-4 py-2">{student.studentClass}</td>
-                                        <td className="border px-4 py-2">{student.percentage}%</td>
-
-                                        <td className="border px-4 py-2">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                            {student.grNo}
+                                        </td>
+                                        <td className="px-4 py-3 max-w-[150px] truncate text-sm text-gray-900">
+                                            {student.name}
+                                        </td>
+                                        <td className="px-4 py-3 max-w-[150px] truncate text-sm text-gray-900">
+                                            {student.motherName}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                            {student.studentClass}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                                            {student.percentage}%
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
                                             <span
-                                                className={`px-2 py-1 rounded ${student.result === 'Pass'
+                                                className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${student.result === 'Pass'
                                                     ? 'bg-green-100 text-green-800'
                                                     : 'bg-red-100 text-red-800'
                                                     }`}
@@ -480,13 +478,13 @@ const StoredStudentDetails = () => {
                                             </span>
                                         </td>
 
-                                        <td className="border px-4 py-2">
+                                        <td className="px-6 py-4 whitespace-nowrap">
                                             <span onClick={() => handlePreview(student.grNo | null)}>
                                                 <Button className="cursor-pointer" variant="secondary">Preview</Button>
                                             </span>
                                         </td>
 
-                                        <td className="border px-4 py-2">
+                                        <td className="px-6 py-4 whitespace-nowrap">
                                             <span onClick={() => {
                                                 handleEdit(student.grNo || null)
                                             }}>
@@ -496,7 +494,7 @@ const StoredStudentDetails = () => {
                                             </span>
                                         </td>
 
-                                        <td className="border px-4 py-2">
+                                        <td className="px-6 py-4 whitespace-nowrap">
                                             <span onClick={() => {
                                                 handleDownload(student.grNo || null)
                                             }}>
@@ -505,7 +503,7 @@ const StoredStudentDetails = () => {
                                             </span>
                                         </td>
 
-                                        <td className="border px-4 py-2">
+                                        <td className="px-6 py-4 whitespace-nowrap">
                                             <span onClick={() => {
                                                 handleDelete(student.grNo || null)
                                             }}>
@@ -519,8 +517,31 @@ const StoredStudentDetails = () => {
                                 ))}
                             </tbody>
                         </table>
-                    </div>
 
+
+                        <div className='mt-6 flex justify-center items-center'>
+                            {/* Pagination Buttons */}
+                            <div className='flex gap-3 '>
+                                <Button
+                                    variant="outline"
+                                    disabled={page <= 0}
+                                    onClick={() => setPage(page - 1)}
+                                >
+                                    Previous
+                                </Button>
+
+                                <Button
+                                    variant="outline"
+                                    disabled={page >= totalPages - 1}
+                                    onClick={() => setPage(page + 1)}
+                                >
+                                    Next
+                                </Button>
+                            </div>
+
+                        </div>
+
+                    </div>
 
                 ) : (
                     // ------------------ NO DATA ------------------

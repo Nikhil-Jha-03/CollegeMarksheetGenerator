@@ -45,7 +45,7 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
   const fetchClasses = async () => {
     try {
       setLoading(true);
-      const response = await api.get("defaultData/getclassesinfo",{withCredentials:true});
+      const response = await api.get("defaultData/getclassesinfo", { withCredentials: true });
       if (response?.data) {
         setClassDisplay(response.data);
       }
@@ -69,10 +69,13 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
       }
 
       setInitialLoading(true);
-      const response = await api.get(`/student/getStudent/${numericGrno}`);
+      const response = await api.get(`/student/getStudent/${numericGrno}`, { withCredentials: true });
       if (response?.status === 200) {
         const studentData = response.data;
         // Format the date if it exists
+
+        console.log(studentData)
+
         if (studentData.dob) {
           studentData.dob = new Date(studentData.dob).toISOString().split('T')[0];
         }
@@ -94,7 +97,7 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
 
   const fetchSubjects = async (classId) => {
     try {
-      const response = await api.get(`defaultData/getsubjectinfo/${classId}`,{withCredentials:true});
+      const response = await api.get(`defaultData/getsubjectinfo/${classId}`, { withCredentials: true });
       if (response?.data && response.data.length > 0) {
         const subjects = response.data.map(item => ({
           subjectName: item.subjectName,
@@ -198,20 +201,20 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
 
     try {
 
-        // const numericGrno = parseInt(studentId);
+      // const numericGrno = parseInt(studentId);
 
-        // if (isNaN(numericGrno) || numericGrno <= 0) {
-        //   toast.error("Unable to delete");
-        //   return;
-        // }
-    
+      // if (isNaN(numericGrno) || numericGrno <= 0) {
+      //   toast.error("Unable to delete");
+      //   return;
+      // }
+
       const endpoint = isEditMode
         ? `/student/updatestudent/${studentId}`
         : "/student/savestudent";
 
       const method = isEditMode ? 'put' : 'post';
 
-      const response = await api[method](endpoint, student ,{withCredentials:true});
+      const response = await api[method](endpoint, student, { withCredentials: true });
 
       if (!response?.data?.success) {
         toast.error(response?.data?.message || "Failed to save");
@@ -221,20 +224,20 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
       toast.success(response?.data?.message || `Student ${isEditMode ? 'updated' : 'saved'} successfully`);
       // toggleView();
       setStudent({
-      name: "",
-      motherName: "",
-      annualResult: "",
-      studentClass: "",
-      dob: "",
-      grNo: "",
-      subjects: [],
-      totalMarks: 0,
-      obtainedMarks: 0,
-      percentage: 0,
-      result: "",
-      remark: "",
-      dateOfIssue: new Date().toISOString().split('T')[0]
-    });
+        name: "",
+        motherName: "",
+        annualResult: "",
+        studentClass: "",
+        dob: "",
+        grNo: "",
+        subjects: [],
+        totalMarks: 0,
+        obtainedMarks: 0,
+        percentage: 0,
+        result: "",
+        remark: "",
+        dateOfIssue: new Date().toISOString().split('T')[0]
+      });
     } catch (error) {
       toast.error("An error occurred while saving");
     }
@@ -426,7 +429,7 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
                       className="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100"
                     />
                   </div>
-                  <div className='flex items-center gap-2'>
+                  {/* <div className='flex items-center gap-2'>
                     <input
                       type="text"
                       placeholder={sub?.total === "GRADE" ? "Enter Grade" : "MARKS"}
@@ -440,7 +443,45 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
                     >
                       <X />
                     </span>
+                  </div> */}
+
+                  <div className='flex items-center gap-2'>
+                    {sub?.total === "GRADE" ? (
+                      // Show grade select dropdown
+                      <select
+                        value={sub?.obtained}
+                        onChange={(e) => handleSubjectChange(index, 'obtained', e.target.value)}
+                        className="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100"
+                      >
+                        <option value="">Select Grade</option>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                        <option value="D">D</option>
+                        <option value="E">E</option>
+                        <option value="F">F</option>
+                      </select>
+                    ) : (
+                      // Show marks input
+                      <input
+                        type="number"
+                        placeholder="MARKS"
+                        value={sub?.obtained}
+                        onChange={(e) => handleSubjectChange(index, 'obtained', e.target.value)}
+                        className="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100"
+                      />
+                    )}
+
+                    <span
+                      onClick={() => removeSubject(index)}
+                      className='cursor-pointer'
+                    >
+                      <X />
+                    </span>
                   </div>
+
+
+
                 </div>
               ))}
             </div>
@@ -493,7 +534,7 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
               onClick={handleSave}
               className="flex-1 px-8 py-4 bg-gray-800 text-white font-bold text-lg hover:bg-gray-700"
             >
-              {isEditMode ? 'Update' : 'Save'} & Preview
+              {isEditMode ? 'Update' : 'Save'}
             </button>
             <button
               onClick={toggleView}
