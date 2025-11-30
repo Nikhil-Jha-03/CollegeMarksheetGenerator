@@ -220,4 +220,17 @@ public class StudentImplementation implements StudentService {
         return new ApiResponse<>(true, "Student updated successfully", null);
     }
 
+    @Override
+    public ApiResponse<FinalStudentDetailDTO> getAll() {
+        List<Student> students = studentRepository.findAll();
+
+        // Assuming you want to return the first student's details
+        if (students.isEmpty()) {
+            return new ApiResponse<>(false, "No students found", null);
+        }
+
+        FinalStudentDetailDTO dto = modelMapper.map(students.get(0), FinalStudentDetailDTO.class);
+        return new ApiResponse<>(true, "Students fetched successfully", dto);
+    }
+
 }

@@ -1,5 +1,6 @@
 package com.nikhil.backend.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -17,6 +18,12 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+
+    @Value("${frontend.url}")
+    private String frontendUrl;
+
+
+
     private final CustomOidcUserService customOidcUserService;
 
     @Bean
@@ -24,7 +31,7 @@ public class SecurityConfig {
         http
                 .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration cfg = new CorsConfiguration();
-                    cfg.addAllowedOrigin("http://localhost:5173");
+                    cfg.addAllowedOrigin(frontendUrl);
                     cfg.addAllowedHeader("*");
                     cfg.addAllowedMethod("*");
                     cfg.setAllowCredentials(true);
@@ -39,7 +46,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated())
                 .oauth2Login(oauth2 -> oauth2
                         .userInfoEndpoint(userInfo -> userInfo.oidcUserService(customOidcUserService))
-                        .defaultSuccessUrl("http://localhost:5173", true))
+                        .defaultSuccessUrl(frontendUrl, true))
                 .logout(logout -> logout
                         .logoutSuccessHandler((request, response, authentication) -> {
                             response.setStatus(HttpServletResponse.SC_OK);

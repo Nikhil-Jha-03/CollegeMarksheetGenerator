@@ -25,7 +25,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 @RestController
 @RequestMapping("/student")
 @Slf4j
-@CrossOrigin
 public class StudentController {
     @Autowired
     private StudentService studentService;
@@ -45,6 +44,14 @@ public class StudentController {
         return ResponseEntity.ok(
                 studentService.getallsavedstudent(searchBy,search, PageRequest.of(page, size)));
     }
+
+    @GetMapping("/getAllStudent")
+    public ResponseEntity<ApiResponse<FinalStudentDetailDTO>> getAllStudent() {
+        
+        return ResponseEntity.ok(
+                studentService.getAll());
+    }
+    
 
 
     @GetMapping("/delete/{id}")

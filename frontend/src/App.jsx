@@ -31,7 +31,7 @@ function App() {
   }
 
   // After loading is done:
-  // If no user → go to login page
+  // If no user -> go to login page
   if (!user) {
     return <LoginPage />;
   }
@@ -59,7 +59,3 @@ function App() {
 
 
 export default App
-
-
-// work on main page design
-// use try catch in backend

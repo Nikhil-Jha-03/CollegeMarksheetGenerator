@@ -42,11 +42,6 @@ public class CustomOidcUserService extends OidcUserService {
         String userEmail = oidcUser.getEmail();
         String userName = oidcUser.getFullName();
 
-        // Log user info
-        log.info("User Email: {}", oidcUser.getEmail());
-        log.info("User Name: {}", oidcUser.getFullName());
-        log.info("User Subject: {}", oidcUser.getSubject());
-
         User user = userRepository.findByEmail(userEmail).orElseGet(() -> {
             User newUser = new User();
             newUser.setEmail(userEmail);

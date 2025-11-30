@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/student")
-@CrossOrigin
 public class PdfGenerationController {
 
     private final PdfGenerationService pdfGenerationService;

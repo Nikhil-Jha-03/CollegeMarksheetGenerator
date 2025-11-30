@@ -307,7 +307,7 @@ const StoredStudentDetails = () => {
 
     return (
         <div className="p-6">
-            <div className="overflow-x-auto min-h-screen poppins">
+            <div className="overflow-x-auto min-h-screen poppins mt-10">
 
                 {/* TOP BAR */}
                 <div className='w-7xl m-auto mt-5 items-center'>
