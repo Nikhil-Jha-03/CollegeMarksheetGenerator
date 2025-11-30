@@ -31,7 +31,7 @@ public class SecurityConfig {
         http
                 .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration cfg = new CorsConfiguration();
-                    cfg.addAllowedOrigin(frontendUrl);
+                    cfg.addAllowedOriginPattern(frontendUrl);
                     cfg.addAllowedHeader("*");
                     cfg.addAllowedMethod("*");
                     cfg.setAllowCredentials(true);
