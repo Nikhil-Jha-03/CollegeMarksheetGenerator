@@ -12,7 +12,7 @@ export const userAuthReducer = createAsyncThunk(
     'userAuth/fetchUserAuth',
     async (_, { rejectWithValue }) => {
         try {
-            const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}api/user`, {
+            const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/user`, {
                 withCredentials: true,
             });
 

@@ -9,7 +9,7 @@ const LoginPage = () => {
     const [isHovered, setIsHovered] = useState(false);
 
     const handleLogin = () => {
-        window.location.href = `${import.meta.env.VITE_BACKEND_URL}oauth2/authorization/google?prompt=select_account`;
+        window.location.href = `${import.meta.env.VITE_BACKEND_URL}/oauth2/authorization/google?prompt=select_account`;
     };
 
     return (

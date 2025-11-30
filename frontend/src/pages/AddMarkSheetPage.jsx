@@ -45,7 +45,7 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
   const fetchClasses = async () => {
     try {
       setLoading(true);
-      const response = await api.get("defaultData/getclassesinfo", { withCredentials: true });
+      const response = await api.get("/defaultData/getclassesinfo", { withCredentials: true });
       if (response?.data) {
         setClassDisplay(response.data);
       }
@@ -97,7 +97,7 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
 
   const fetchSubjects = async (classId) => {
     try {
-      const response = await api.get(`defaultData/getsubjectinfo/${classId}`, { withCredentials: true });
+      const response = await api.get(`/defaultData/getsubjectinfo/${classId}`, { withCredentials: true });
       if (response?.data && response.data.length > 0) {
         const subjects = response.data.map(item => ({
           subjectName: item.subjectName,
