@@ -38,6 +38,7 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
     remark: "",
     dateOfIssue: new Date().toISOString().split('T')[0]
   });
+  const [isSaving, setIsSaving] = useState(false);
 
   const isEditMode = mode === 'edit';
 
@@ -202,6 +203,7 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
 
 
   const handleSave = async () => {
+    if (isSaving) return;
     if (!student.name || !student.motherName || !student.studentClass || !student.dob || !student.grNo || !student.annualResult) {
       toast.error("Please fill all required fields");
       return;
@@ -213,6 +215,7 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
 
     try {
 
+      setIsSaving(true);
       // const numericGrno = parseInt(studentId);
 
       // if (isNaN(numericGrno) || numericGrno <= 0) {
@@ -252,10 +255,12 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
       });
     } catch (error) {
       toast.error("An error occurred while saving");
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const debouncedHandleSave = debounce(handleSave, 1200);
+  const debouncedHandleSave = useMemo(() => debounce(handleSave, 1200), [handleSave]);
 
 
   useEffect(() => {
@@ -547,10 +552,20 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
           <div className="flex gap-4">
             <button
               onClick={debouncedHandleSave}
-              className="flex-1 px-8 py-4 bg-gray-800 text-white font-bold text-lg hover:bg-gray-700"
+              disabled={isSaving}
+              className={`flex-1 px-8 py-4 font-bold text-lg text-white 
+    ${isSaving ? "bg-gray-600 cursor-not-allowed" : "bg-gray-800 hover:bg-gray-700"}`}
             >
-              {isEditMode ? 'Update' : 'Save'}
+              {isSaving ? (
+                <div className="flex items-center justify-center gap-3">
+                  <span className="loader h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                  {isEditMode ? "Updating..." : "Saving..."}
+                </div>
+              ) : (
+                isEditMode ? "Update" : "Save"
+              )}
             </button>
+
             <button
               onClick={toggleView}
               className="px-8 py-4 border-2 border-gray-800 text-gray-800 font-bold text-lg hover:bg-gray-100"
