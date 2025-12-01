@@ -57,7 +57,7 @@ export default function LandingPage() {
         {/* CTA Button */}
         <button
           onClick={() => navigate("/createmarksheet")}
-          className="group relative px-8 py-4 bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-lg font-semibold rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95 overflow-hidden"
+          className="group relative px-8 py-4 bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-lg font-semibold rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95 overflow-hidden cursor-pointer"
         >
           <div className="absolute inset-0 bg-linear-to-r from-blue-700 to-purple-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           <span className="relative flex items-center gap-2">

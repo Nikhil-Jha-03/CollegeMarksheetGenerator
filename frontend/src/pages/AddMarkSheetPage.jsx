@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Templete from './Templete';
 import api from '../api/axios';
@@ -421,7 +421,7 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
             <h2 className="text-xl font-bold">Subject Marks</h2>
             <button
               onClick={addSubject}
-              className="px-6 py-3 bg-gray-800 text-white font-medium text-base hover:bg-gray-700"
+              className="px-6 py-3 bg-gray-800 text-white font-medium text-base hover:bg-gray-700 cursor-pointer"
             >
               + Add Subject
             </button>
@@ -510,7 +510,7 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
               <p className="text-lg text-gray-600 mb-4">No subjects added yet</p>
               <button
                 onClick={addSubject}
-                className="px-6 py-3 bg-gray-800 text-white font-medium text-base"
+                className="px-6 py-3 bg-gray-800 text-white font-medium text-base cursor-pointer"
               >
                 Add Your First Subject
               </button>
@@ -553,7 +553,7 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
             <button
               onClick={debouncedHandleSave}
               disabled={isSaving}
-              className={`flex-1 px-8 py-4 font-bold text-lg text-white 
+              className={`flex-1 px-8 py-4 font-bold text-lg text-white cursor-pointer
     ${isSaving ? "bg-gray-600 cursor-not-allowed" : "bg-gray-800 hover:bg-gray-700"}`}
             >
               {isSaving ? (
@@ -568,7 +568,7 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
 
             <button
               onClick={toggleView}
-              className="px-8 py-4 border-2 border-gray-800 text-gray-800 font-bold text-lg hover:bg-gray-100"
+              className="px-8 py-4 border-2 border-gray-800 text-gray-800 font-bold text-lg hover:bg-gray-100 cursor-pointer"
             >
               Preview
             </button>

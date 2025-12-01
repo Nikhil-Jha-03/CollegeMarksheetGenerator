@@ -1,9 +1,8 @@
-import axios from "axios";
 import { Button } from "./ui/button";
 
 export default function LogoutButton() {
   const logout = async () => {
-    await axios.post("/logout", {
+    await api.post("/logout", {
       withCredentials: true,
     });
     window.location.href = "/login";

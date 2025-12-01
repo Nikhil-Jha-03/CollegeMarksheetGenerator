@@ -476,20 +476,20 @@ const StoredStudentDetails = () => {
                             </div>
                             {/* Download All */}
                             <div>
-                                <span onClick={handleDownloadAll}>
+                                <span className='cursor-pointer' onClick={handleDownloadAll}>
                                     <Button> Download All </Button>
                                 </span>
                             </div>
 
                             {/* Excel Download */}
                             <div>
-                                <span onClick={downloadExcel}>
+                                <span className='cursor-pointer' onClick={downloadExcel}>
                                     <Button> Excel Download </Button>
                                 </span>
                             </div>
 
                             <div>
-                                <span onClick={handleDeleteAll}>
+                                <span className='cursor-pointer' onClick={handleDeleteAll}>
                                     <Button variant="destructive"> Delete All Student Record </Button>
                                 </span>
                             </div>
@@ -611,7 +611,7 @@ const StoredStudentDetails = () => {
                                             <span onClick={() => {
                                                 handleEdit(student.grNo || null)
                                             }}>
-                                                <Button variant="secondary">
+                                                <Button className="cursor-pointer" variant="secondary">
                                                     Edit
                                                 </Button>
                                             </span>
