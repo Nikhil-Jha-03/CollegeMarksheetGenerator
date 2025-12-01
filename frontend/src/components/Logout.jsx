@@ -1,12 +1,16 @@
-import { Button } from "./ui/button";
-import api from '../api/axios';
+import { useNavigate } from "react-router-dom";
+import api from "../api";
 
 export default function LogoutButton() {
+  const navigate = useNavigate();
+
   const logout = async () => {
-    await api.post("/logout", {
-      withCredentials: true,
-    });
-    window.location.href = "/login";
+    try {
+      await api.post("/logout", {}, { withCredentials: true });
+    } catch (e) {
+      console.log(e);
+    }
+    navigate("/login");
   };
 
   return <Button variant={"destructive"} onClick={logout}>Logout</Button>;
