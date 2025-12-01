@@ -25,6 +25,8 @@ public interface StudentService {
 
     ApiResponse<Void> updateStudent(Long grno, StudentDetailDTO entity);
 
-    ApiResponse<FinalStudentDetailDTO> getAll();
+    ApiResponse<List<FinalStudentDetailDTO>> getAll();
+
+    ApiResponse<Void> deleteAll();
 
 }

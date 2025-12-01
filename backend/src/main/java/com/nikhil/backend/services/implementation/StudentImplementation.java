@@ -221,16 +221,47 @@ public class StudentImplementation implements StudentService {
     }
 
     @Override
-    public ApiResponse<FinalStudentDetailDTO> getAll() {
-        List<Student> students = studentRepository.findAll();
+    public ApiResponse<List<FinalStudentDetailDTO>> getAll() {
+         List<Student> students = studentRepository.findAll();
 
-        // Assuming you want to return the first student's details
-        if (students.isEmpty()) {
-            return new ApiResponse<>(false, "No students found", null);
+    if (students.isEmpty()) {
+        return new ApiResponse<>(false, "No students found", null);
+    }
+
+    // Map all students to DTOs
+    List<FinalStudentDetailDTO> studentDTOs = students.stream()
+            .map(student -> modelMapper.map(student, FinalStudentDetailDTO.class))
+            .collect(Collectors.toList());
+
+    return new ApiResponse<>(true, "Students fetched successfully", studentDTOs);
+    }
+
+    @Override
+    public ApiResponse<Void> deleteAll() {
+         try {
+            // Get count before deletion for response message
+            long count = studentRepository.count();
+            
+            if (count == 0) {
+                return new ApiResponse<>(false, "No students found to delete", null);
+            }
+
+            // Delete all students
+            studentRepository.deleteAll();
+
+            return new ApiResponse<>(
+                true, 
+                " student record(s) deleted successfully",
+                null
+            );
+            
+        } catch (Exception e) {
+            return new ApiResponse<>(
+                false, 
+                "Failed to delete students: " + e.getMessage(), 
+                null
+            );
         }
-
-        FinalStudentDetailDTO dto = modelMapper.map(students.get(0), FinalStudentDetailDTO.class);
-        return new ApiResponse<>(true, "Students fetched successfully", dto);
     }
 
 }

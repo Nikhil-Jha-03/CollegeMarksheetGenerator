@@ -5,6 +5,17 @@ import api from '../api/axios';
 import { X } from 'lucide-react';
 import { toast } from 'react-toastify';
 
+
+
+function debounce(fn, delay = 1000) {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delay);
+  };
+}
+
+
 const MarkSheetFormPage = ({ mode = 'add' }) => {
   const { studentId } = useParams();
   const navigate = useNavigate();
@@ -189,6 +200,7 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
     }));
   }, [student.subjects]);
 
+
   const handleSave = async () => {
     if (!student.name || !student.motherName || !student.studentClass || !student.dob || !student.grNo || !student.annualResult) {
       toast.error("Please fill all required fields");
@@ -242,6 +254,9 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
       toast.error("An error occurred while saving");
     }
   };
+
+  const debouncedHandleSave = debounce(handleSave, 1200);
+
 
   useEffect(() => {
     calculateMarks();
@@ -531,7 +546,7 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
         <div className="bg-white shadow-sm p-8">
           <div className="flex gap-4">
             <button
-              onClick={handleSave}
+              onClick={debouncedHandleSave}
               className="flex-1 px-8 py-4 bg-gray-800 text-white font-bold text-lg hover:bg-gray-700"
             >
               {isEditMode ? 'Update' : 'Save'}

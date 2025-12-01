@@ -73,7 +73,6 @@ const StoredStudentDetails = () => {
         return
     }
 
-
     const handleDelete = async (grNo) => {
         const numericGrno = parseInt(grNo);
 
@@ -110,6 +109,104 @@ const StoredStudentDetails = () => {
             toast.error(error.response?.data?.message || "Delete failed");
         }
     };
+
+    const handleDeleteAll = async () => {
+    try {
+        // First confirmation
+        const firstConfirm = await Swal.fire({
+            title: "⚠️ Delete All Students?",
+            text: "This will permanently delete ALL student records from the database",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Yes, continue",
+            cancelButtonText: "Cancel",
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6"
+        });
+
+        if (!firstConfirm.isConfirmed) return;
+
+        // Second confirmation with input verification
+        const secondConfirm = await Swal.fire({
+            title: "Final Confirmation Required",
+            html: `
+                <p style="color: #d33; font-weight: bold; margin-bottom: 10px;">
+                    ⚠️ THIS ACTION CANNOT BE UNDONE!
+                </p>
+                <p style="margin-bottom: 15px;">
+                    Type <strong>DELETE ALL</strong> to confirm
+                </p>
+            `,
+            input: "text",
+            inputPlaceholder: "Type DELETE ALL here",
+            icon: "error",
+            showCancelButton: true,
+            confirmButtonText: "Delete Everything",
+            cancelButtonText: "Cancel",
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            inputValidator: (value) => {
+                if (value !== "DELETE ALL") {
+                    return "Please type DELETE ALL exactly to confirm";
+                }
+            }
+        });
+
+        if (!secondConfirm.isConfirmed) return;
+
+        // Show loading state
+        Swal.fire({
+            title: "Deleting...",
+            text: "Please wait while we delete all student records",
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        // Make API call
+        const response = await api.delete('/student/deleteAllStudents', { 
+            withCredentials: true 
+        });
+
+        // Close loading
+        Swal.close();
+
+        if (!response?.data?.success) {
+            await Swal.fire({
+                title: "Error!",
+                text: response?.data?.message || "Failed to delete students",
+                icon: "error",
+                confirmButtonColor: "#3085d6"
+            });
+            return;
+        }
+
+        // Success message
+        await Swal.fire({
+            title: "Deleted!",
+            text: response?.data?.message || "All students deleted successfully",
+            icon: "success",
+            confirmButtonColor: "#3085d6"
+        });
+
+        // Refresh your student list or navigate
+        // fetchStudents(); // Uncomment if you have a refresh function
+        // navigate('/students'); // Or navigate to another page
+        
+    } catch (error) {
+        Swal.close();
+        console.error("Delete all error:", error);
+        
+        await Swal.fire({
+            title: "Error!",
+            text: error?.response?.data?.message || "An error occurred while deleting students",
+            icon: "error",
+            confirmButtonColor: "#3085d6"
+        });
+    }
+};
 
     const handleDownload = async (grNo) => {
         const numericGrno = parseInt(grNo);
@@ -185,96 +282,116 @@ const StoredStudentDetails = () => {
         return;
     }
 
-    const downloadExcel = () => {
-        try {
-            // Get all unique subjects across all students
-            const allSubjects = new Set();
-            studentsData.forEach(student => {
+    const downloadExcel = async () => {
+    try {
+        toast.info("Fetching student data...");
+        
+        // Fetch data from backend
+        const response = await api.get('/student/getAllStudent', { 
+            withCredentials: true 
+        });
+
+        if (!response?.data?.success) {
+            toast.error(response?.data?.message || "Failed to fetch student data");
+            return;
+        }
+
+        const newStudentsData = response.data.data; // Adjust based on your API response structure
+
+        // Validate data
+        if (!newStudentsData || newStudentsData.length === 0) {
+            toast.warning("No student records found to export");
+            return;
+        }
+
+        // Get all unique subjects across all students
+        const allSubjects = new Set();
+        newStudentsData.forEach(student => {
+            if (student.subjects && Array.isArray(student.subjects)) {
                 student.subjects.forEach(sub => {
                     allSubjects.add(sub.subjectName);
                 });
-            });
+            }
+        });
 
-            // Convert to sorted array for consistent column order
-            const subjectList = Array.from(allSubjects).sort();
+        // Convert to sorted array for consistent column order
+        const subjectList = Array.from(allSubjects).sort();
 
-            // Flatten student data with individual subject columns
-            const flattened = studentsData.map((s) => {
-                const row = {
-                    'Name': s.name,
-                    'GR No': s.grNo,
-                    'Roll No': s.rollNo,
-                    'Annual Result': s.annualResult,
-                    'Mother Name': s.motherName,
-                    'Class': s.studentClass,
-                    'DOB': s.dob,
-                    'Date of Issue': s.dateOfIssue,
-                };
+        // Flatten student data with individual subject columns
+        const flattened = newStudentsData.map((s) => {
+            const row = {
+                'Name': s.name || "-",
+                'GR No': s.grNo || "-",
+                'Roll No': s.rollNo || "-",
+                'Annual Result': s.annualResult || "-",
+                'Mother Name': s.motherName || "-",
+                'Class': s.studentClass || "-",
+                'DOB': s.dob || "-",
+                'Date of Issue': s.dateOfIssue || "-",
+            };
 
-                // Add each subject as a separate column
-                subjectList.forEach(subjectName => {
-                    const subject = s.subjects.find(sub => sub.subjectName === subjectName);
-                    if (subject) {
-                        // For graded subjects
-                        if (subject.total === "GRADE") {
-                            row[subjectName] = subject.obtained || "-";
-                        } else {
-                            // For marks-based subjects
-                            row[subjectName] = subject.obtained
-                                ? `${subject.obtained}/${subject.total}`
-                                : `-/${subject.total}`;
-                        }
+            // Add each subject as a separate column
+            subjectList.forEach(subjectName => {
+                const subject = s.subjects?.find(sub => sub.subjectName === subjectName);
+                if (subject) {
+                    // For graded subjects
+                    if (subject.total === "GRADE") {
+                        row[subjectName] = subject.obtained || "-";
                     } else {
-                        row[subjectName] = "-";
+                        // For marks-based subjects
+                        row[subjectName] = subject.obtained
+                            ? `${subject.obtained}/${subject.total}`
+                            : `-/${subject.total}`;
                     }
-                });
-
-                // Add summary fields at the end
-                row['Total Marks'] = s.totalMarks;
-                row['Obtained Marks'] = s.obtainedMarks;
-                row['Percentage'] = s.percentage ? `${s.percentage}%` : "0%";
-                row['Result'] = s.result;
-                row['Remark'] = s.remark || "-";
-
-                return row;
+                } else {
+                    row[subjectName] = "-";
+                }
             });
 
-            // Create worksheet from data
-            const worksheet = XLSX.utils.json_to_sheet(flattened);
+            // Add summary fields at the end
+            row['Total Marks'] = s.totalMarks || 0;
+            row['Obtained Marks'] = s.obtainedMarks || 0;
+            row['Percentage'] = s.percentage ? `${s.percentage}%` : "0%";
+            row['Result'] = s.result || "-";
+            row['Remark'] = s.remark || "-";
 
-            // Auto-size columns (optional but recommended)
-            const maxWidth = 50;
-            const colWidths = [];
+            return row;
+        });
 
-            // Get headers
-            const headers = Object.keys(flattened[0] || {});
+        // Create worksheet from data
+        const worksheet = XLSX.utils.json_to_sheet(flattened);
 
-            headers.forEach((header, i) => {
-                const maxLength = Math.max(
-                    header.length,
-                    ...flattened.map(row => String(row[header] || '').length)
-                );
-                colWidths[i] = { wch: Math.min(maxLength + 2, maxWidth) };
-            });
+        // Auto-size columns
+        const maxWidth = 50;
+        const colWidths = [];
+        const headers = Object.keys(flattened[0] || {});
 
-            worksheet['!cols'] = colWidths;
+        headers.forEach((header, i) => {
+            const maxLength = Math.max(
+                header.length,
+                ...flattened.map(row => String(row[header] || '').length)
+            );
+            colWidths[i] = { wch: Math.min(maxLength + 2, maxWidth) };
+        });
 
-            // Create workbook and add worksheet
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Student Records");
+        worksheet['!cols'] = colWidths;
 
-            // Generate filename with current date
-            const fileName = `Student_Report_${new Date().toISOString().split('T')[0]}.xlsx`;
+        // Create workbook and add worksheet
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Student Records");
 
-            // Download file
-            XLSX.writeFile(workbook, fileName);
+        // Generate filename with current date
+        const fileName = `Student_Report_${new Date().toISOString().split('T')[0]}.xlsx`;
 
-            toast.success("Excel file downloaded successfully!");
-        } catch (error) {
-            console.error("Export error:", error);
-            toast.error("Failed to download Excel file. Please try again.");
-        }
-    };
+        // Download file
+        XLSX.writeFile(workbook, fileName);
+
+        toast.success(`Excel file downloaded successfully! (${newStudentsData.length} records)`);
+    } catch (error) {
+        console.error("Export error:", error);
+        toast.error("Failed to download Excel file. Please try again.");
+    }
+};
 
     // ------------ DEBOUNCE FETCH -------------
     useEffect(() => {
@@ -368,6 +485,12 @@ const StoredStudentDetails = () => {
                             <div>
                                 <span onClick={downloadExcel}>
                                     <Button> Excel Download </Button>
+                                </span>
+                            </div>
+
+                            <div>
+                                <span onClick={handleDeleteAll}>
+                                    <Button variant="destructive"> Delete All Student Record </Button>
                                 </span>
                             </div>
                         </div>

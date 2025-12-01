@@ -3,7 +3,7 @@ import { Button } from "./ui/button";
 
 export default function LogoutButton() {
   const logout = async () => {
-    await axios.get(`${import.meta.env.VITE_BACKEND_URL}logout`, {
+    await axios.get("/logout", {
       withCredentials: true,
     });
     window.location.href = "/login";

@@ -1,9 +1,12 @@
 package com.nikhil.backend.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -31,7 +34,6 @@ public class StudentController {
 
     @PostMapping("/savestudent")
     public ResponseEntity<ApiResponse<Void>> postMethodName(@RequestBody StudentDetailDTO entity) {
-        System.out.println(entity);
         return ResponseEntity.ok().body(studentService.savestudent(entity));
     }
 
@@ -46,14 +48,17 @@ public class StudentController {
     }
 
     @GetMapping("/getAllStudent")
-    public ResponseEntity<ApiResponse<FinalStudentDetailDTO>> getAllStudent() {
-        
+    public ResponseEntity<ApiResponse<List<FinalStudentDetailDTO>>> getAllStudent() {
+
         return ResponseEntity.ok(
                 studentService.getAll());
     }
+
+    @DeleteMapping("/deleteAllStudents")
+    public ResponseEntity<ApiResponse<Void>> deleteAllStudents() {
+        return ResponseEntity.ok(studentService.deleteAll());
+    }
     
-
-
     @GetMapping("/delete/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteStudent(@PathVariable Long id) {
         return ResponseEntity.ok().body(studentService.deleteStudent(id));
@@ -66,7 +71,6 @@ public class StudentController {
 
     @PutMapping("/updatestudent/{grno}")
     public ResponseEntity<ApiResponse<Void>> updateStudent(@PathVariable Long grno, @RequestBody StudentDetailDTO entity) {
-        System.out.println(entity);
         return ResponseEntity.ok().body(studentService.updateStudent(grno,entity));
     }
     
