@@ -1,4 +1,5 @@
 import { Button } from "./ui/button";
+import api from '../api/axios';
 
 export default function LogoutButton() {
   const logout = async () => {
