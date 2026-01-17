@@ -107,7 +107,7 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
     }
   };
 
-  const fetchSubjects = async (classId) => {
+ const fetchSubjects = async (classId) => {
   try {
     const response = await api.get(
       `/defaultData/getsubjectinfo/${classId}`,
@@ -116,8 +116,8 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
 
     if (response?.data && response.data.length > 0) {
       const subjects = response.data.map(item => {
-         const isComputerScience =
-  subject.subjectName?.trim().toUpperCase() === "COMPUTER SCIENCE";
+        const isComputerScience =
+          item.subjectName?.trim().toUpperCase() === "COMPUTER SCIENCE";
 
         return {
           subjectName: item.subjectName,
@@ -136,11 +136,13 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
       setStudent(prev => ({ ...prev, subjects }));
     }
   } catch (error) {
+    console.error(error); // 🔥 add this for debugging
     toast.error("Failed to fetch subjects");
   } finally {
     setLoading(false);
   }
 };
+
 
   const handleClassChange = (value) => {
     const classId = parseInt(value);
@@ -185,51 +187,51 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
     }));
   };
 
-const calculateMarks = useCallback(() => {
-  let total = 0;
-  let obtained = 0;
-  let isFail = false;
+  const calculateMarks = useCallback(() => {
+    let total = 0;
+    let obtained = 0;
+    let isFail = false;
 
-  student.subjects.forEach(subject => {
-    if (subject.type?.toLowerCase() !== "grade") {
-      const subjectTotal = Number(subject.total) || 0;
-      const obtainedMarks = Number(subject.obtained) || 0;
+    student.subjects.forEach(subject => {
+      if (subject.type?.toLowerCase() !== "grade") {
+        const subjectTotal = Number(subject.total) || 0;
+        const obtainedMarks = Number(subject.obtained) || 0;
 
-      total += subjectTotal;
-      obtained += obtainedMarks;
+        total += subjectTotal;
+        obtained += obtainedMarks;
 
-      const isComputerScience =
-  subject.subjectName?.trim().toUpperCase() === "COMPUTER SCIENCE";
+        const isComputerScience =
+          subject.subjectName?.trim().toUpperCase() === "COMPUTER SCIENCE";
 
-      // ✅ Subject-wise passing criteria
-      if (
-        obtainedMarks > 0 &&
-        (
-          (isComputerScience && obtainedMarks < 70) ||
-          (!isComputerScience && obtainedMarks < 35)
-        )
-      ) {
-        isFail = true;
+        // ✅ Subject-wise passing criteria
+        if (
+          obtainedMarks > 0 &&
+          (
+            (isComputerScience && obtainedMarks < 70) ||
+            (!isComputerScience && obtainedMarks < 35)
+          )
+        ) {
+          isFail = true;
+        }
       }
-    }
-  });
+    });
 
-  const percentage = total > 0 ? (obtained / total) * 100 : 0;
+    const percentage = total > 0 ? (obtained / total) * 100 : 0;
 
-  const result = isFail ? "Fail" : "Pass";
-  const remark = isFail
-    ? "Failed and not eligible for promotion to Standard XII"
-    : "Passed and Promoted to Standard XII";
+    const result = isFail ? "Fail" : "Pass";
+    const remark = isFail
+      ? "Failed and not eligible for promotion to Standard XII"
+      : "Passed and Promoted to Standard XII";
 
-  setStudent(prev => ({
-    ...prev,
-    totalMarks: total,
-    obtainedMarks: obtained,
-    percentage: percentage.toFixed(2),
-    result,
-    remark
-  }));
-}, [student.subjects]);
+    setStudent(prev => ({
+      ...prev,
+      totalMarks: total,
+      obtainedMarks: obtained,
+      percentage: percentage.toFixed(2),
+      result,
+      remark
+    }));
+  }, [student.subjects]);
 
 
 
