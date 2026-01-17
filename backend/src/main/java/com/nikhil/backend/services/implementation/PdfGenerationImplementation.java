@@ -3,6 +3,7 @@ package com.nikhil.backend.services.implementation;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
@@ -106,6 +107,17 @@ public class PdfGenerationImplementation implements PdfGenerationService {
     private String buildHtmlString(FinalStudentDetailDTO student) {
         StringBuilder html = new StringBuilder();
 
+
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+        String dob = student.getDob() != null
+            ? student.getDob().format(dateFormatter)
+            : "";
+
+    String dateOfIssue = student.getDateOfIssue() != null
+            ? student.getDateOfIssue().format(dateFormatter)
+            : "";
+
+
         // Get logo as base64
         String logoBase64 = getLogoAsBase64();
 
@@ -149,7 +161,7 @@ public class PdfGenerationImplementation implements PdfGenerationService {
                 .append("</td>");
         html.append("</tr>");
         html.append("<tr>");
-        html.append("<td class='label'>Date of Birth:</td><td class='value'>").append(student.getDob()).append("</td>");
+        html.append("<td class='label'>Date of Birth:</td><td class='value'>").append(dob).append("</td>");
         html.append("<td class='label'>G.R. No.:</td><td class='value'>").append(student.getGrNo()).append("</td>");
         html.append("</tr>");
         html.append("</table>");
@@ -187,7 +199,7 @@ public class PdfGenerationImplementation implements PdfGenerationService {
 
         // Footer
         html.append("<div class='footer'>");
-        html.append("<p><strong>Date of Issue:</strong> ").append(student.getDateOfIssue()).append("</p>");
+        html.append("<p><strong>Date of Issue:</strong> ").append(dateOfIssue).append("</p>");
         html.append("</div>");
 
         // Signatures
