@@ -16,3 +16,5 @@ export default function LogoutButton() {
 
   return <Button variant={"destructive"} onClick={logout}>Logout</Button>;
 }
+
+// changes in the login page to the url for the logout api call

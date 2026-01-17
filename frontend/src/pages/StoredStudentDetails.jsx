@@ -22,6 +22,13 @@ const StoredStudentDetails = () => {
     const [previewData, setPreviewData] = useState({})
     const [searchBy, setSearchBy] = useState('')
     const [search, setSearch] = useState('')
+    
+    // Loading states for buttons
+    const [downloadingAll, setDownloadingAll] = useState(false);
+    const [downloadingExcel, setDownloadingExcel] = useState(false);
+    const [deletingAll, setDeletingAll] = useState(false);
+    const [downloadingStudent, setDownloadingStudent] = useState({});
+    const [deletingStudent, setDeletingStudent] = useState({});
 
 
     const allowedKeys = [
@@ -93,6 +100,7 @@ const StoredStudentDetails = () => {
 
         if (!confirm.isConfirmed) return;
 
+        setDeletingStudent(prev => ({ ...prev, [numericGrno]: true }));
 
         try {
             const response = await api.get(`/student/delete/${numericGrno}`, { withCredentials: true });
@@ -107,29 +115,31 @@ const StoredStudentDetails = () => {
 
         } catch (error) {
             toast.error(error.response?.data?.message || "Delete failed");
+        } finally {
+            setDeletingStudent(prev => ({ ...prev, [numericGrno]: false }));
         }
     };
 
     const handleDeleteAll = async () => {
-    try {
-        // First confirmation
-        const firstConfirm = await Swal.fire({
-            title: "⚠️ Delete All Students?",
-            text: "This will permanently delete ALL student records from the database",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonText: "Yes, continue",
-            cancelButtonText: "Cancel",
-            confirmButtonColor: "#d33",
-            cancelButtonColor: "#3085d6"
-        });
+        try {
+            // First confirmation
+            const firstConfirm = await Swal.fire({
+                title: "⚠️ Delete All Students?",
+                text: "This will permanently delete ALL student records from the database",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Yes, continue",
+                cancelButtonText: "Cancel",
+                confirmButtonColor: "#d33",
+                cancelButtonColor: "#3085d6"
+            });
 
-        if (!firstConfirm.isConfirmed) return;
+            if (!firstConfirm.isConfirmed) return;
 
-        // Second confirmation with input verification
-        const secondConfirm = await Swal.fire({
-            title: "Final Confirmation Required",
-            html: `
+            // Second confirmation with input verification
+            const secondConfirm = await Swal.fire({
+                title: "Final Confirmation Required",
+                html: `
                 <p style="color: #d33; font-weight: bold; margin-bottom: 10px;">
                     ⚠️ THIS ACTION CANNOT BE UNDONE!
                 </p>
@@ -137,84 +147,74 @@ const StoredStudentDetails = () => {
                     Type <strong>DELETE ALL</strong> to confirm
                 </p>
             `,
-            input: "text",
-            inputPlaceholder: "Type DELETE ALL here",
-            icon: "error",
-            showCancelButton: true,
-            confirmButtonText: "Delete Everything",
-            cancelButtonText: "Cancel",
-            confirmButtonColor: "#d33",
-            cancelButtonColor: "#3085d6",
-            inputValidator: (value) => {
-                if (value !== "DELETE ALL") {
-                    return "Please type DELETE ALL exactly to confirm";
+                input: "text",
+                inputPlaceholder: "Type DELETE ALL here",
+                icon: "error",
+                showCancelButton: true,
+                confirmButtonText: "Delete Everything",
+                cancelButtonText: "Cancel",
+                confirmButtonColor: "#d33",
+                cancelButtonColor: "#3085d6",
+                inputValidator: (value) => {
+                    if (value !== "DELETE ALL") {
+                        return "Please type DELETE ALL exactly to confirm";
+                    }
                 }
+            });
+
+            if (!secondConfirm.isConfirmed) return;
+
+            setDeletingAll(true);
+
+            // Make API call
+            const response = await api.delete('/student/deleteAllStudents', {
+                withCredentials: true
+            });
+
+            if (!response?.data?.success) {
+                await Swal.fire({
+                    title: "Error!",
+                    text: response?.data?.message || "Failed to delete students",
+                    icon: "error",
+                    confirmButtonColor: "#3085d6"
+                });
+                return;
             }
-        });
 
-        if (!secondConfirm.isConfirmed) return;
+            // Success message
+            await Swal.fire({
+                title: "Deleted!",
+                text: response?.data?.message || "All students deleted successfully",
+                icon: "success",
+                confirmButtonColor: "#3085d6"
+            });
 
-        // Show loading state
-        Swal.fire({
-            title: "Deleting...",
-            text: "Please wait while we delete all student records",
-            allowOutsideClick: false,
-            allowEscapeKey: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
+            fetchStudentDetails();
 
-        // Make API call
-        const response = await api.delete('/student/deleteAllStudents', { 
-            withCredentials: true 
-        });
+        } catch (error) {
+            console.error("Delete all error:", error);
 
-        // Close loading
-        Swal.close();
-
-        if (!response?.data?.success) {
             await Swal.fire({
                 title: "Error!",
-                text: response?.data?.message || "Failed to delete students",
+                text: error?.response?.data?.message || "An error occurred while deleting students",
                 icon: "error",
                 confirmButtonColor: "#3085d6"
             });
-            return;
+        } finally {
+            setDeletingAll(false);
         }
-
-        // Success message
-        await Swal.fire({
-            title: "Deleted!",
-            text: response?.data?.message || "All students deleted successfully",
-            icon: "success",
-            confirmButtonColor: "#3085d6"
-        });
-
-        // Refresh your student list or navigate
-        // fetchStudents(); // Uncomment if you have a refresh function
-        // navigate('/students'); // Or navigate to another page
-        
-    } catch (error) {
-        Swal.close();
-        console.error("Delete all error:", error);
-        
-        await Swal.fire({
-            title: "Error!",
-            text: error?.response?.data?.message || "An error occurred while deleting students",
-            icon: "error",
-            confirmButtonColor: "#3085d6"
-        });
-    }
-};
+    };
 
     const handleDownload = async (grNo) => {
         const numericGrno = parseInt(grNo);
 
         if (isNaN(numericGrno) || numericGrno <= 0) {
-            toast.error("Unable to delete");
+            toast.error("Unable to download");
             return;
         }
+
+        setDownloadingStudent(prev => ({ ...prev, [numericGrno]: true }));
+
         try {
             const response = await api.get(`/api/student/pdf/${numericGrno}`, {
                 responseType: 'blob',
@@ -237,12 +237,13 @@ const StoredStudentDetails = () => {
             toast.success("Result Downloaded")
         } catch (error) {
             toast.error("Something went wrong")
-
+        } finally {
+            setDownloadingStudent(prev => ({ ...prev, [numericGrno]: false }));
         }
-
     }
 
     const handleDownloadAll = async () => {
+        setDownloadingAll(true);
         try {
 
             const response = await api.get("/api/student/pdf/all", {
@@ -267,6 +268,8 @@ const StoredStudentDetails = () => {
 
         } catch (error) {
             toast.error("Something went wrong")
+        } finally {
+            setDownloadingAll(false);
         }
     }
 
@@ -274,7 +277,7 @@ const StoredStudentDetails = () => {
         const numericGrno = parseInt(grNo);
 
         if (isNaN(numericGrno) || numericGrno <= 0) {
-            toast.error("Unable to delete");
+            toast.error("Unable to edit");
             return;
         }
 
@@ -283,115 +286,118 @@ const StoredStudentDetails = () => {
     }
 
     const downloadExcel = async () => {
-    try {
-        toast.info("Fetching student data...");
-        
-        // Fetch data from backend
-        const response = await api.get('/student/getAllStudent', { 
-            withCredentials: true 
-        });
+        setDownloadingExcel(true);
+        try {
+            toast.info("Fetching student data...");
 
-        if (!response?.data?.success) {
-            toast.error(response?.data?.message || "Failed to fetch student data");
-            return;
-        }
+            // Fetch data from backend
+            const response = await api.get('/student/getAllStudent', {
+                withCredentials: true
+            });
 
-        const newStudentsData = response.data.data; // Adjust based on your API response structure
-
-        // Validate data
-        if (!newStudentsData || newStudentsData.length === 0) {
-            toast.warning("No student records found to export");
-            return;
-        }
-
-        // Get all unique subjects across all students
-        const allSubjects = new Set();
-        newStudentsData.forEach(student => {
-            if (student.subjects && Array.isArray(student.subjects)) {
-                student.subjects.forEach(sub => {
-                    allSubjects.add(sub.subjectName);
-                });
+            if (!response?.data?.success) {
+                toast.error(response?.data?.message || "Failed to fetch student data");
+                return;
             }
-        });
 
-        // Convert to sorted array for consistent column order
-        const subjectList = Array.from(allSubjects).sort();
+            const newStudentsData = response.data.data; // Adjust based on your API response structure
 
-        // Flatten student data with individual subject columns
-        const flattened = newStudentsData.map((s) => {
-            const row = {
-                'Name': s.name || "-",
-                'GR No': s.grNo || "-",
-                'Roll No': s.rollNo || "-",
-                'Annual Result': s.annualResult || "-",
-                'Mother Name': s.motherName || "-",
-                'Class': s.studentClass || "-",
-                'DOB': s.dob || "-",
-                'Date of Issue': s.dateOfIssue || "-",
-            };
+            // Validate data
+            if (!newStudentsData || newStudentsData.length === 0) {
+                toast.warning("No student records found to export");
+                return;
+            }
 
-            // Add each subject as a separate column
-            subjectList.forEach(subjectName => {
-                const subject = s.subjects?.find(sub => sub.subjectName === subjectName);
-                if (subject) {
-                    // For graded subjects
-                    if (subject.total === "GRADE") {
-                        row[subjectName] = subject.obtained || "-";
-                    } else {
-                        // For marks-based subjects
-                        row[subjectName] = subject.obtained
-                            ? `${subject.obtained}/${subject.total}`
-                            : `-/${subject.total}`;
-                    }
-                } else {
-                    row[subjectName] = "-";
+            // Get all unique subjects across all students
+            const allSubjects = new Set();
+            newStudentsData.forEach(student => {
+                if (student.subjects && Array.isArray(student.subjects)) {
+                    student.subjects.forEach(sub => {
+                        allSubjects.add(sub.subjectName);
+                    });
                 }
             });
 
-            // Add summary fields at the end
-            row['Total Marks'] = s.totalMarks || 0;
-            row['Obtained Marks'] = s.obtainedMarks || 0;
-            row['Percentage'] = s.percentage ? `${s.percentage}%` : "0%";
-            row['Result'] = s.result || "-";
-            row['Remark'] = s.remark || "-";
+            // Convert to sorted array for consistent column order
+            const subjectList = Array.from(allSubjects).sort();
 
-            return row;
-        });
+            // Flatten student data with individual subject columns
+            const flattened = newStudentsData.map((s) => {
+                const row = {
+                    'Name': s.name || "-",
+                    'GR No': s.grNo || "-",
+                    'Roll No': s.rollNo || "-",
+                    'Annual Result': s.annualResult || "-",
+                    'Mother Name': s.motherName || "-",
+                    'Class': s.studentClass || "-",
+                    'DOB': s.dob || "-",
+                    'Date of Issue': s.dateOfIssue || "-",
+                };
 
-        // Create worksheet from data
-        const worksheet = XLSX.utils.json_to_sheet(flattened);
+                // Add each subject as a separate column
+                subjectList.forEach(subjectName => {
+                    const subject = s.subjects?.find(sub => sub.subjectName === subjectName);
+                    if (subject) {
+                        // For graded subjects
+                        if (subject.total === "GRADE") {
+                            row[subjectName] = subject.obtained || "-";
+                        } else {
+                            // For marks-based subjects
+                            row[subjectName] = subject.obtained
+                                ? `${subject.obtained}/${subject.total}`
+                                : `-/${subject.total}`;
+                        }
+                    } else {
+                        row[subjectName] = "-";
+                    }
+                });
 
-        // Auto-size columns
-        const maxWidth = 50;
-        const colWidths = [];
-        const headers = Object.keys(flattened[0] || {});
+                // Add summary fields at the end
+                row['Total Marks'] = s.totalMarks || 0;
+                row['Obtained Marks'] = s.obtainedMarks || 0;
+                row['Percentage'] = s.percentage ? `${s.percentage}%` : "0%";
+                row['Result'] = s.result || "-";
+                row['Remark'] = s.remark || "-";
 
-        headers.forEach((header, i) => {
-            const maxLength = Math.max(
-                header.length,
-                ...flattened.map(row => String(row[header] || '').length)
-            );
-            colWidths[i] = { wch: Math.min(maxLength + 2, maxWidth) };
-        });
+                return row;
+            });
 
-        worksheet['!cols'] = colWidths;
+            // Create worksheet from data
+            const worksheet = XLSX.utils.json_to_sheet(flattened);
 
-        // Create workbook and add worksheet
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Student Records");
+            // Auto-size columns
+            const maxWidth = 50;
+            const colWidths = [];
+            const headers = Object.keys(flattened[0] || {});
 
-        // Generate filename with current date
-        const fileName = `Student_Report_${new Date().toISOString().split('T')[0]}.xlsx`;
+            headers.forEach((header, i) => {
+                const maxLength = Math.max(
+                    header.length,
+                    ...flattened.map(row => String(row[header] || '').length)
+                );
+                colWidths[i] = { wch: Math.min(maxLength + 2, maxWidth) };
+            });
 
-        // Download file
-        XLSX.writeFile(workbook, fileName);
+            worksheet['!cols'] = colWidths;
 
-        toast.success(`Excel file downloaded successfully! (${newStudentsData.length} records)`);
-    } catch (error) {
-        console.error("Export error:", error);
-        toast.error("Failed to download Excel file. Please try again.");
-    }
-};
+            // Create workbook and add worksheet
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Student Records");
+
+            // Generate filename with current date
+            const fileName = `Student_Report_${new Date().toISOString().split('T')[0]}.xlsx`;
+
+            // Download file
+            XLSX.writeFile(workbook, fileName);
+
+            toast.success(`Excel file downloaded successfully! (${newStudentsData.length} records)`);
+        } catch (error) {
+            console.error("Export error:", error);
+            toast.error("Failed to download Excel file. Please try again.");
+        } finally {
+            setDownloadingExcel(false);
+        }
+    };
 
     // ------------ DEBOUNCE FETCH -------------
     useEffect(() => {
@@ -477,20 +483,29 @@ const StoredStudentDetails = () => {
                             {/* Download All */}
                             <div>
                                 <span className='cursor-pointer' onClick={handleDownloadAll}>
-                                    <Button> Download All </Button>
+                                    <Button disabled={downloadingAll}>
+                                        {downloadingAll && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                                        Download All
+                                    </Button>
                                 </span>
                             </div>
 
                             {/* Excel Download */}
                             <div>
                                 <span className='cursor-pointer' onClick={downloadExcel}>
-                                    <Button> Excel Download </Button>
+                                    <Button disabled={downloadingExcel}>
+                                        {downloadingExcel && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                                        Excel Download
+                                    </Button>
                                 </span>
                             </div>
 
                             <div>
                                 <span className='cursor-pointer' onClick={handleDeleteAll}>
-                                    <Button variant="destructive"> Delete All Student Record </Button>
+                                    <Button variant="destructive" disabled={deletingAll}>
+                                        {deletingAll && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                                        Delete All Student Record
+                                    </Button>
                                 </span>
                             </div>
                         </div>
@@ -593,8 +608,8 @@ const StoredStudentDetails = () => {
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span
                                                 className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${student.result === 'Pass'
-                                                    ? 'bg-green-100 text-green-800'
-                                                    : 'bg-red-100 text-red-800'
+                                                        ? 'bg-green-100 text-green-800'
+                                                        : 'bg-red-100 text-red-800'
                                                     }`}
                                             >
                                                 {student.result}
@@ -621,8 +636,15 @@ const StoredStudentDetails = () => {
                                             <span onClick={() => {
                                                 handleDownload(student.grNo || null)
                                             }}>
-
-                                                <Button className="cursor-pointer" >Print</Button>
+                                                <Button 
+                                                    className="cursor-pointer" 
+                                                    disabled={downloadingStudent[student.grNo]}
+                                                >
+                                                    {downloadingStudent[student.grNo] && (
+                                                        <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                                                    )}
+                                                    Print
+                                                </Button>
                                             </span>
                                         </td>
 
@@ -630,8 +652,17 @@ const StoredStudentDetails = () => {
                                             <span onClick={() => {
                                                 handleDelete(student.grNo || null)
                                             }}>
-                                                <Button className="cursor-pointer" variant="destructive">
-                                                    <Trash className="h-4 w-4 mr-1" /> Delete
+                                                <Button 
+                                                    className="cursor-pointer" 
+                                                    variant="destructive"
+                                                    disabled={deletingStudent[student.grNo]}
+                                                >
+                                                    {deletingStudent[student.grNo] ? (
+                                                        <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                                                    ) : (
+                                                        <Trash className="h-4 w-4 mr-1" />
+                                                    )}
+                                                    Delete
                                                 </Button>
                                             </span>
                                         </td>

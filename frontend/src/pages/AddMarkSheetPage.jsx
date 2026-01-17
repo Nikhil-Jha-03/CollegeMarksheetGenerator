@@ -108,24 +108,39 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
   };
 
   const fetchSubjects = async (classId) => {
-    try {
-      const response = await api.get(`/defaultData/getsubjectinfo/${classId}`, { withCredentials: true });
-      if (response?.data && response.data.length > 0) {
-        const subjects = response.data.map(item => ({
+  try {
+    const response = await api.get(
+      `/defaultData/getsubjectinfo/${classId}`,
+      { withCredentials: true }
+    );
+
+    if (response?.data && response.data.length > 0) {
+      const subjects = response.data.map(item => {
+         const isComputerScience =
+  subject.subjectName?.trim().toUpperCase() === "COMPUTER SCIENCE";
+
+        return {
           subjectName: item.subjectName,
-          total: item.marksType === "MARKS" ? 100 : "GRADE",
+          total:
+            item.marksType === "MARKS"
+              ? isComputerScience
+                ? 200
+                : 100
+              : "GRADE",
           obtained: "",
           type: item.marksType,
           subjectCode: item.subjectCode
-        }));
-        setStudent(prev => ({ ...prev, subjects }));
-      }
-    } catch (error) {
-      toast.error("Failed to fetch subjects");
-    } finally {
-      setLoading(false);
+        };
+      });
+
+      setStudent(prev => ({ ...prev, subjects }));
     }
-  };
+  } catch (error) {
+    toast.error("Failed to fetch subjects");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleClassChange = (value) => {
     const classId = parseInt(value);
@@ -170,36 +185,52 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
     }));
   };
 
-  const calculateMarks = useCallback(() => {
-    let total = 0;
-    let obtained = 0;
-    let isFail = false;
+const calculateMarks = useCallback(() => {
+  let total = 0;
+  let obtained = 0;
+  let isFail = false;
 
-    student.subjects.forEach(subject => {
-      if (subject.type?.toLowerCase() !== "grade") {
-        total += Number(subject.total) || 0;
-        const obtainedMarks = Number(subject.obtained) || 0;
-        obtained += obtainedMarks;
+  student.subjects.forEach(subject => {
+    if (subject.type?.toLowerCase() !== "grade") {
+      const subjectTotal = Number(subject.total) || 0;
+      const obtainedMarks = Number(subject.obtained) || 0;
 
-        if (obtainedMarks > 0 && obtainedMarks < 35) {
-          isFail = true;
-        }
+      total += subjectTotal;
+      obtained += obtainedMarks;
+
+      const isComputerScience =
+  subject.subjectName?.trim().toUpperCase() === "COMPUTER SCIENCE";
+
+      // ✅ Subject-wise passing criteria
+      if (
+        obtainedMarks > 0 &&
+        (
+          (isComputerScience && obtainedMarks < 70) ||
+          (!isComputerScience && obtainedMarks < 35)
+        )
+      ) {
+        isFail = true;
       }
-    });
+    }
+  });
 
-    const percentage = total > 0 ? (obtained / total) * 100 : 0;
-    const result = isFail ? "Fail" : "Pass";
-    const remark = isFail ? "Failed and not eligible for promotion to Standard XII" : "Passed and Promoted to Standard XII";
+  const percentage = total > 0 ? (obtained / total) * 100 : 0;
 
-    setStudent(prev => ({
-      ...prev,
-      totalMarks: total,
-      obtainedMarks: obtained,
-      percentage: percentage.toFixed(2),
-      result,
-      remark
-    }));
-  }, [student.subjects]);
+  const result = isFail ? "Fail" : "Pass";
+  const remark = isFail
+    ? "Failed and not eligible for promotion to Standard XII"
+    : "Passed and Promoted to Standard XII";
+
+  setStudent(prev => ({
+    ...prev,
+    totalMarks: total,
+    obtainedMarks: obtained,
+    percentage: percentage.toFixed(2),
+    result,
+    remark
+  }));
+}, [student.subjects]);
+
 
 
   const handleSave = async () => {
