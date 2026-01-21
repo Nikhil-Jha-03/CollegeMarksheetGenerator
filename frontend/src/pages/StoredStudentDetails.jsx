@@ -574,6 +574,7 @@ const StoredStudentDetails = () => {
 
                     <div className='w-7xl m-auto table-fade mt-9'>
                         <table className="border-collapse border border-gray-300 mt-5 shadow-lg ">
+                            <thead>
                             <tr className="bg-linear-to-r from-gray-50 to-gray-100 border-b border-gray-200">
                                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">GR No</th>
                                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Name</th>
@@ -586,6 +587,7 @@ const StoredStudentDetails = () => {
                                 <th className="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Print</th>
                                 <th className="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Delete</th>
                             </tr>
+                            </thead>
 
                             <tbody>
                                 {studentsData.map((student, index) => (

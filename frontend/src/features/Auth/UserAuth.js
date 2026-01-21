@@ -15,7 +15,6 @@ export const userAuthReducer = createAsyncThunk(
             const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/user`, {
                 withCredentials: true,
             });
-
             return res.data.data;
         } catch (err) {
             return rejectWithValue(err.response?.data || 'Failed to fetch user')

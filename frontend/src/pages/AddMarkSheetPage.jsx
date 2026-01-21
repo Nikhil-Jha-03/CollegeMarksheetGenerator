@@ -4,6 +4,10 @@ import Templete from './Templete';
 import api from '../api/axios';
 import { X } from 'lucide-react';
 import { toast } from 'react-toastify';
+import "react-datepicker/dist/react-datepicker.css";
+import DatePicker from "react-datepicker";
+import { parseISO } from "date-fns";
+
 
 
 
@@ -51,7 +55,11 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
       setStudent(prev => ({ ...prev, [field]: classText }));
       return;
     }
-    setStudent(prev => ({ ...prev, [field]: value }));
+
+    setStudent(prev => ({
+      ...prev,
+      [field]: typeof value === "string" ? value.toUpperCase() : value
+    }));
   };
 
   const fetchClasses = async () => {
@@ -107,41 +115,41 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
     }
   };
 
- const fetchSubjects = async (classId) => {
-  try {
-    const response = await api.get(
-      `/defaultData/getsubjectinfo/${classId}`,
-      { withCredentials: true }
-    );
+  const fetchSubjects = async (classId) => {
+    try {
+      const response = await api.get(
+        `/defaultData/getsubjectinfo/${classId}`,
+        { withCredentials: true }
+      );
 
-    if (response?.data && response.data.length > 0) {
-      const subjects = response.data.map(item => {
-        const isComputerScience =
-          item.subjectName?.trim().toUpperCase() === "COMPUTER SCIENCE";
+      if (response?.data && response.data.length > 0) {
+        const subjects = response.data.map(item => {
+          const isComputerScience =
+            item.subjectName?.trim().toUpperCase() === "COMPUTER SCIENCE";
 
-        return {
-          subjectName: item.subjectName,
-          total:
-            item.marksType === "MARKS"
-              ? isComputerScience
-                ? 200
-                : 100
-              : "GRADE",
-          obtained: "",
-          type: item.marksType,
-          subjectCode: item.subjectCode
-        };
-      });
+          return {
+            subjectName: item.subjectName,
+            total:
+              item.marksType === "MARKS"
+                ? isComputerScience
+                  ? 200
+                  : 100
+                : "GRADE",
+            obtained: "",
+            type: item.marksType,
+            subjectCode: item.subjectCode
+          };
+        });
 
-      setStudent(prev => ({ ...prev, subjects }));
+        setStudent(prev => ({ ...prev, subjects }));
+      }
+    } catch (error) {
+      console.error(error); // 🔥 add this for debugging
+      toast.error("Failed to fetch subjects");
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error(error); // 🔥 add this for debugging
-    toast.error("Failed to fetch subjects");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
 
   const handleClassChange = (value) => {
@@ -381,7 +389,7 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
                   type="text"
                   value={student.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
-                  className="w-full border-2 border-gray-300 px-4 py-3 text-base focus:border-gray-800 focus:outline-none"
+                  className="w-full border-2 border-gray-300 px-4 py-3 text-base focus:border-gray-800 focus:outline-none uppercase"
                   placeholder="Enter student name"
                 />
               </div>
@@ -392,7 +400,7 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
                   type="text"
                   value={student.motherName}
                   onChange={(e) => handleInputChange('motherName', e.target.value)}
-                  className="w-full border-2 border-gray-300 px-4 py-3 text-base focus:border-gray-800 focus:outline-none"
+                  className="w-full border-2 border-gray-300 px-4 py-3 text-base focus:border-gray-800 focus:outline-none uppercase"
                   placeholder="Enter mother's name"
                 />
               </div>
@@ -415,14 +423,28 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
               </div>
 
               <div>
-                <label className="block text-base font-semibold mb-2">Date of Birth *</label>
-                <input
-                  type="date"
-                  value={student.dob}
-                  onChange={(e) => handleInputChange('dob', e.target.value)}
+                <label className="w-full block text-base font-semibold mb-2">
+                  Date of Birth *
+                </label>
+
+                <DatePicker
+                  selected={student.dob ? parseISO(student.dob) : null}
+                  onChange={(date) =>
+                    handleInputChange(
+                      "dob",
+                      date ? date.toISOString().split("T")[0] : ""
+                    )
+                  }
+                  dateFormat="dd/MM/yyyy"
+                  showYearDropdown
+                  showMonthDropdown
+                  dropdownMode="select"
+                  maxDate={new Date()}
+                  placeholderText="Select date"
                   className="w-full border-2 border-gray-300 px-4 py-3 text-base focus:border-gray-800 focus:outline-none"
                 />
               </div>
+
 
               <div>
                 <label className="block text-base font-semibold mb-2">G.R. No. *</label>

@@ -272,16 +272,16 @@ public class PdfGenerationImplementation implements PdfGenerationService {
                     }
 
                     h1 {
-                        font-size: 16pt;
-                        font-weight: bold;
-                        margin: 5px 0;
+                        font-size: 14pt;      /* smaller */
+                        font-weight: 500;     /* lighter */
+                        margin: 4px 0;
                         color: #000;
                     }
 
                     h2 {
-                        font-size: 14pt;
-                        font-weight: 600;
-                        margin: 3px 0;
+                        font-size: 16pt;      /* bigger */
+                        font-weight: 700;     /* bolder */
+                        margin: 6px 0;
                         color: #000;
                     }
 

@@ -38,6 +38,13 @@ public class StudentImplementation implements StudentService {
 
     private final ModelMapper modelMapper;
 
+
+
+    private String normalizeString(String input) {
+        return input == null ? null : input.trim().toUpperCase();
+    }
+
+
     @Override
     public ApiResponse<Void> savestudent(StudentDetailDTO entity) {
 
@@ -58,8 +65,8 @@ public class StudentImplementation implements StudentService {
         student2.setDob(entity.getDob());
         student2.setAnnualResult(entity.getAnnualResult());
         student2.setGrNo(grLong);
-        student2.setMotherName(entity.getMotherName());
-        student2.setName(entity.getName());
+        student2.setMotherName(normalizeString(entity.getMotherName()));
+        student2.setName(normalizeString(entity.getName()));
         student2.setObtainedMarks(entity.getObtainedMarks());
         student2.setPercentage(entity.getPercentage());
         student2.setResult(entity.getResult());
@@ -167,6 +174,7 @@ public class StudentImplementation implements StudentService {
         return finalStudentDetailDTO;
     }
 
+    @Transactional
     @Override
     public ApiResponse<Void> updateStudent(Long grno, StudentDetailDTO dto) {
 
@@ -176,14 +184,17 @@ public class StudentImplementation implements StudentService {
             return new ApiResponse<>(false, "Student not found", null);
         }
 
-        // Save IDs that shouldn't be changed
-        Long id = student.getStudentId();
-        Long existingGr = student.getGrNo();
-        Long roll = student.getRollNo();
-
-        // Update basic fields
-        student.setName(dto.getName());
-        student.setMotherName(dto.getMotherName());
+        // 🔐 Check if GR No is changing
+        if (student.getGrNo() != dto.getGrNo()) {
+            Student existingStudent = studentRepository.findByGrNo(dto.getGrNo());
+            if (existingStudent != null) {
+                return new ApiResponse<>(false, "GR No already exists", null);
+            }
+            student.setGrNo(dto.getGrNo());
+        }
+        // Update other fields
+        student.setName(normalizeString(dto.getName()));
+        student.setMotherName(normalizeString(dto.getMotherName()));
         student.setStudentClass(dto.getStudentClass());
         student.setAnnualResult(dto.getAnnualResult());
         student.setDob(dto.getDob());
@@ -194,15 +205,9 @@ public class StudentImplementation implements StudentService {
         student.setResult(dto.getResult());
         student.setRemark(dto.getRemark());
 
-        // Restore protected IDs
-        student.setStudentId(id);
-        student.setGrNo(existingGr);
-        student.setRollNo(roll);
+        // 🔄 Update subjects
+        student.getSubjects().clear(); // orphanRemoval = true
 
-        // Clear existing subjects (orphanRemoval will delete them)
-        student.getSubjects().clear();
-
-        // Add new subjects
         if (dto.getSubjects() != null) {
             for (StudentSubjectDTO subDTO : dto.getSubjects()) {
                 StudentSubject subject = new StudentSubject();
@@ -222,26 +227,26 @@ public class StudentImplementation implements StudentService {
 
     @Override
     public ApiResponse<List<FinalStudentDetailDTO>> getAll() {
-         List<Student> students = studentRepository.findAll();
+        List<Student> students = studentRepository.findAll();
 
-    if (students.isEmpty()) {
-        return new ApiResponse<>(false, "No students found", null);
-    }
+        if (students.isEmpty()) {
+            return new ApiResponse<>(false, "No students found", null);
+        }
 
-    // Map all students to DTOs
-    List<FinalStudentDetailDTO> studentDTOs = students.stream()
-            .map(student -> modelMapper.map(student, FinalStudentDetailDTO.class))
-            .collect(Collectors.toList());
+        // Map all students to DTOs
+        List<FinalStudentDetailDTO> studentDTOs = students.stream()
+                .map(student -> modelMapper.map(student, FinalStudentDetailDTO.class))
+                .collect(Collectors.toList());
 
-    return new ApiResponse<>(true, "Students fetched successfully", studentDTOs);
+        return new ApiResponse<>(true, "Students fetched successfully", studentDTOs);
     }
 
     @Override
     public ApiResponse<Void> deleteAll() {
-         try {
+        try {
             // Get count before deletion for response message
             long count = studentRepository.count();
-            
+
             if (count == 0) {
                 return new ApiResponse<>(false, "No students found to delete", null);
             }
@@ -250,17 +255,15 @@ public class StudentImplementation implements StudentService {
             studentRepository.deleteAll();
 
             return new ApiResponse<>(
-                true, 
-                " student record(s) deleted successfully",
-                null
-            );
-            
+                    true,
+                    " student record(s) deleted successfully",
+                    null);
+
         } catch (Exception e) {
             return new ApiResponse<>(
-                false, 
-                "Failed to delete students: " + e.getMessage(), 
-                null
-            );
+                    false,
+                    "Failed to delete students: " + e.getMessage(),
+                    null);
         }
     }
 
