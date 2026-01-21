@@ -705,7 +705,7 @@ const StoredStudentDetails = () => {
                                 <Button
                                     variant="outline"
                                     disabled={page >= totalPages - 1}
-                                    onClick={() => setPage(totalPages)}
+                                    onClick={() => setPage(totalPages - 1)}
                                 >
                                     Last Page
                                 </Button>
