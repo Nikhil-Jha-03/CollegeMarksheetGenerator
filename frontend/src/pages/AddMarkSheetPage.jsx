@@ -62,6 +62,14 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
     }));
   };
 
+  const formatDate = (date) => {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, "0");
+    const dd = String(date.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+
   const fetchClasses = async () => {
     try {
       setLoading(true);
@@ -432,7 +440,7 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
                   onChange={(date) =>
                     handleInputChange(
                       "dob",
-                      date ? date.toISOString().split("T")[0] : ""
+                      date ? formatDate(date) : ""
                     )
                   }
                   dateFormat="dd/MM/yyyy"
@@ -441,8 +449,9 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
                   dropdownMode="select"
                   maxDate={new Date()}
                   placeholderText="Select date"
-                  className="w-full border-2 border-gray-300 px-4 py-3 text-base focus:border-gray-800 focus:outline-none"
+                  className="w-full border border-gray-300 px-4 py-3"
                 />
+
               </div>
 
 
