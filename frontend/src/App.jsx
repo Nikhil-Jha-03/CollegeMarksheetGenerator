@@ -11,6 +11,7 @@ import { userAuthReducer } from './features/Auth/UserAuth'
 import useAuth from './hooks/useAuth.js'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import { Loader2 } from 'lucide-react'
+import LeavingCertificate from './pages/LeavingCertificate'
 
 
 function App() {
@@ -51,6 +52,7 @@ function App() {
           <Route path="createmarksheet" element={<AddMarkSheetPage />} />
           <Route path="allstudent" element={<StoredStudentDetails />} />
           <Route path="editstudent/:studentId" element={<AddMarkSheetPage mode="edit" />} />
+          <Route path="leavingcertificate" element={<LeavingCertificate />} />
         </Route>
       </Route>
     </Routes>

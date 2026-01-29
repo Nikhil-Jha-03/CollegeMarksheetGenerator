@@ -14,7 +14,7 @@ export default function LogoutButton() {
     navigate("/login");
   };
 
-  return <Button variant={"destructive"} onClick={logout}>Logout</Button>;
+  return <Button variant={"destructive"} className="hover:scale-105 transition-all" onClick={logout}>Logout</Button>;
 }
 
 // changes in the login page to the url for the logout api call

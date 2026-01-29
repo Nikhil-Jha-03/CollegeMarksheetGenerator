@@ -28,9 +28,6 @@ public class StudentSpecification {
             Class<?> searchByType = root.get(searchBy).getJavaType();
 
 
-            log.info("TYPE OF SEARCH TYPE = {}", searchByType);
-
-
             // If searchBy is numeric → convert and compare
             if (Number.class.isAssignableFrom(searchByType)) {
                 try {
@@ -53,5 +50,4 @@ public class StudentSpecification {
             return cb.equal(root.get(searchBy), search);
         };
     }
-
 }

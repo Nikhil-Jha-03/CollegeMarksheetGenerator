@@ -25,11 +25,11 @@ export default function NavBar() {
         </div>
 
         {/* Desktop Menu */}
-        <ul className="hidden md:flex gap-6 text-sm poppins-semibold items-center">
+        <ul className="hidden md:flex gap-6 text-sm poppins-semibold items-center ">
           <NavLink
             to={"/"}
             className={({ isActive }) =>
-              `hover:text-blue-600 cursor-pointer transition-colors ${
+              `hover:text-blue-600 cursor-pointer hover:scale-105 transition-all ${
                 isActive ? "text-blue-600 font-bold" : "text-gray-700"
               }`
             }
@@ -40,7 +40,7 @@ export default function NavBar() {
           <NavLink
             to={"/createmarksheet"}
             className={({ isActive }) =>
-              `hover:text-blue-600 cursor-pointer transition-colors ${
+              `hover:text-blue-600 cursor-pointer hover:scale-105 transition-all ${
                 isActive ? "text-blue-600 font-bold" : "text-gray-700"
               }`
             }
@@ -51,12 +51,23 @@ export default function NavBar() {
           <NavLink
             to={"/allstudent"}
             className={({ isActive }) =>
-              `hover:text-blue-600 cursor-pointer transition-colors ${
+              `hover:text-blue-600 cursor-pointer hover:scale-105 transition-all ${
                 isActive ? "text-blue-600 font-bold" : "text-gray-700"
               }`
             }
           >
             All Marksheet
+          </NavLink>
+
+          <NavLink
+            to={"/leavingcertificate"}
+            className={({ isActive }) =>
+              `hover:text-blue-600 cursor-pointer hover:scale-105 transition-all ${
+                isActive ? "text-blue-600 font-bold" : "text-gray-700"
+              }`
+            }
+          >
+            Leaving Certificate
           </NavLink>
 
           {isAuthenticated && (

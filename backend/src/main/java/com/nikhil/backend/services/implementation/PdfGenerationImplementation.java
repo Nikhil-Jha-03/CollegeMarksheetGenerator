@@ -107,16 +107,14 @@ public class PdfGenerationImplementation implements PdfGenerationService {
     private String buildHtmlString(FinalStudentDetailDTO student) {
         StringBuilder html = new StringBuilder();
 
-
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
         String dob = student.getDob() != null
-            ? student.getDob().format(dateFormatter)
-            : "";
+                ? student.getDob().format(dateFormatter)
+                : "";
 
-    String dateOfIssue = student.getDateOfIssue() != null
-            ? student.getDateOfIssue().format(dateFormatter)
-            : "";
-
+        String dateOfIssue = student.getDateOfIssue() != null
+                ? student.getDateOfIssue().format(dateFormatter)
+                : "";
 
         // Get logo as base64
         String logoBase64 = getLogoAsBase64();
