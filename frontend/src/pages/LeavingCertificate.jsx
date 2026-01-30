@@ -15,7 +15,8 @@ import {
     ArrowLeft,
     ChevronLeft,
     ChevronRight,
-    AlertCircle
+    AlertCircle,
+    X
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { Button } from '../components/ui/button';
@@ -51,9 +52,11 @@ const getStudentTypeBadge = (type) => {
 
 // --- Main Component ---
 
-const LeavingCertificate = () => {
+const LeavingCertificate = ({ editMode = false }) => {
     // UI Modes
     const [searchMode, setSearchMode] = useState(false);
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [editingId, setEditingId] = useState(null);
 
     // Loading States
     const [saveLoading, setSaveLoading] = useState(false);
@@ -66,6 +69,7 @@ const LeavingCertificate = () => {
     const [searchText, setSearchText] = useState("");
     const debounceTimeoutRef = useRef(null);
     const [lcRecords, setLcRecords] = useState([]);
+
 
     // Pagination State
     const [pagination, setPagination] = useState({
@@ -185,6 +189,7 @@ const LeavingCertificate = () => {
         return () => clearTimeout(debounceTimeoutRef.current);
     }, [searchText, searchMode, fetchRecords]);
 
+
     const handlePageChange = (newPage) => {
         if (newPage >= 0 && newPage < pagination.totalPages) {
             fetchRecords(newPage, searchText);
@@ -210,11 +215,32 @@ const LeavingCertificate = () => {
 
         setSaveLoading(true);
         try {
-            const response = await api.post('/leavingcertificate/createLC', formData, { withCredentials: true });
+            const payload = {
+                ...formData, dateOfBirth: formatDate(formData.dateOfBirth),
+                dateOfAdmission: formatDate(formData.dateOfAdmission),
+                dateOfLeaving: formatDate(formData.dateOfLeaving),
+            };
+
+            let response;
+            if (isEditMode && editingId) {
+                // Update existing record
+                response = await api.put(`/leavingcertificate/updateLC/${editingId}`, payload, { withCredentials: true });
+            } else {
+                // Create new record
+                response = await api.post('/leavingcertificate/createLC', payload, { withCredentials: true });
+            }
+
             if (response.data.success) {
-                toast.success("Certificate saved successfully!");
+                toast.success(isEditMode ? "Certificate updated successfully!" : "Certificate saved successfully!");
                 // Complete form reset
                 setFormData(initialFormState);
+                setIsEditMode(false);
+                setEditingId(null);
+
+                // If we were in search mode, refresh the list
+                if (searchMode) {
+                    fetchRecords(pagination.page, searchText);
+                }
             } else {
                 toast.error(response?.data?.message || "Error saving certificate data");
             }
@@ -226,6 +252,73 @@ const LeavingCertificate = () => {
         }
     };
 
+    const handleEditRecord = async (id) => {
+        try {
+            const res = await api.get(`/leavingcertificate/getLcbyid/${id}`, {
+                withCredentials: true
+            });
+
+            if (!res.data.success) {
+                toast.error("Failed to load record");
+                return;
+            }
+
+            const data = res.data.data; // ✅ IMPORTANT
+
+            console.log(id)
+            console.log(data)
+
+            setFormData({
+                studentType: data.studentType || 'FOR PRIVATE STUDENT',
+                studentPEN: data.studentPEN || '',
+                uniqueIDAdhar: data.uniqueIDAdhar || '',
+                studentApaarID: data.studentApaarID || '',
+                studentID: data.studentID || '',
+                studentName: data.studentName || '',
+                isDuplicate: data.isDuplicate ?? false,
+                motherName: data.motherName || '',
+                nationality: data.nationality || 'INDIAN',
+                motherTongue: data.motherTongue || '',
+                religion: data.religion || '',
+                caste: data.caste || '',
+                progress: data.progress || '',
+                conduct: data.conduct || '',
+                placeOfBirth: data.placeOfBirth || '',
+                dateOfBirth: data.dateOfBirth || '',
+                dateOfBirthWords: data.dateOfBirthWords || '',
+                lastSchool: data.lastSchool || '',
+                dateOfAdmission: data.dateOfAdmission || '',
+                dateOfLeaving: data.dateOfLeaving || '',
+                standard: data.standard || '',
+                reasonForLeaving: data.reasonForLeaving || "AS PER STUDENT'S APPLICATION",
+                remarks: data.remarks || '',
+                grNo: data.grNo || ''
+            });
+
+            setIsEditMode(true);
+            setEditingId(data.id);
+            setSearchMode(false);
+
+            toast.info(`Editing: ${data.studentName}`);
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        } catch (error) {
+            console.error("Error loading record for edit:", error);
+            toast.error("Error loading record for editing");
+        }
+    };
+
+
+    const handleCancelEdit = () => {
+        if (window.confirm("Are you sure you want to cancel editing? All unsaved changes will be lost.")) {
+            setFormData(initialFormState);
+            setIsEditMode(false);
+            setEditingId(null);
+            toast.info("Edit cancelled");
+        }
+    };
+
     const deleteLcRecord = async (id) => {
         if (!window.confirm("Are you sure you want to delete this record? This action cannot be undone.")) return;
 
@@ -234,7 +327,7 @@ const LeavingCertificate = () => {
             const response = await api.delete(`/leavingcertificate/deleteLC/${id}`, { withCredentials: true });
             if (response.data.success) {
                 toast.success("Record deleted successfully");
-                
+
                 // Check if we need to go to previous page
                 if (lcRecords.length === 1 && pagination.page > 0) {
                     fetchRecords(pagination.page - 1, searchText);
@@ -248,10 +341,10 @@ const LeavingCertificate = () => {
             console.error("Error deleting record:", error);
             toast.error(error.response?.data?.message || "Error deleting record");
         } finally {
-            setActionLoading(prev => { 
-                const newState = { ...prev }; 
-                delete newState[id]; 
-                return newState; 
+            setActionLoading(prev => {
+                const newState = { ...prev };
+                delete newState[id];
+                return newState;
             });
         }
     };
@@ -264,7 +357,7 @@ const LeavingCertificate = () => {
                 withCredentials: true,
                 responseType: 'blob',
             });
-            
+
             const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
             const link = document.createElement('a');
             link.href = url;
@@ -278,26 +371,16 @@ const LeavingCertificate = () => {
             console.error("Error downloading file:", error);
             toast.error(error.response?.data?.message || "Error downloading file");
         } finally {
-            setActionLoading(prev => { 
-                const newState = { ...prev }; 
-                delete newState[id]; 
-                return newState; 
+            setActionLoading(prev => {
+                const newState = { ...prev };
+                delete newState[id];
+                return newState;
             });
         }
     };
 
-    const handleInputChange = (e, date) => {
-        if (date !== undefined) {
-            setFormData(prev => ({ ...prev, [e]: date }));
-            if (e === "dateOfBirth") {
-                const words = parseDate(date);
-                setFormData(prev => ({ ...prev, dateOfBirthWords: words || '' }));
-            }
-            return;
-        }
-        const { name, type, value, checked } = e.target;
-        setFormData(prev => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
-    };
+    const handleInputChange = (e, date) => { if (date !== undefined) { setFormData(prev => ({ ...prev, [e]: date })); if (e === "dateOfBirth") { const words = parseDate(date); setFormData(prev => ({ ...prev, dateOfBirthWords: words || '' })); } return; } const { name, type, value, checked } = e.target; setFormData(prev => ({ ...prev, [name]: type === "checkbox" ? checked : value })); };
+
 
     // --- RENDER: SEARCH MODE ---
     if (searchMode) {
@@ -387,13 +470,13 @@ const LeavingCertificate = () => {
                                 </div>
                                 <h3 className="text-xl font-semibold text-gray-900 mb-2">No Records Found</h3>
                                 <p className="text-gray-500 mt-2 max-w-md">
-                                    {searchText 
+                                    {searchText
                                         ? `No results found for "${searchText}". Try adjusting your search terms.`
                                         : "No leaving certificates available. Create your first record to get started."
                                     }
                                 </p>
                                 {searchText && (
-                                    <Button 
+                                    <Button
                                         onClick={() => {
                                             setSearchText('');
                                             setPagination(prev => ({ ...prev, page: 0 }));
@@ -428,7 +511,7 @@ const LeavingCertificate = () => {
                                                 </span>
                                                 {lc.uniqueIDAdhar && (
                                                     <span className="flex items-center gap-1">
-                                                        <span className="font-semibold text-gray-700">UID:</span> 
+                                                        <span className="font-semibold text-gray-700">UID:</span>
                                                         <span className="font-mono text-xs">{lc.uniqueIDAdhar}</span>
                                                     </span>
                                                 )}
@@ -458,10 +541,11 @@ const LeavingCertificate = () => {
                                                 )}
                                             </Button>
 
-                                            <Button 
-                                                variant="outline" 
+                                            <Button
+                                                variant="outline"
                                                 size="sm"
                                                 className="flex-1 md:flex-none border-gray-200 text-gray-700 hover:bg-gray-50"
+                                                onClick={() => handleEditRecord(lc.id)}
                                             >
                                                 <Edit className="w-4 h-4 md:mr-2" />
                                                 <span className="hidden md:inline">Edit</span>
@@ -505,11 +589,11 @@ const LeavingCertificate = () => {
                                     disabled={pagination.page === 0}
                                     className="disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    <ChevronLeft className="w-4 h-4 mr-1" /> 
+                                    <ChevronLeft className="w-4 h-4 mr-1" />
                                     <span className="hidden sm:inline">Previous</span>
                                     <span className="sm:hidden">Prev</span>
                                 </Button>
-                                
+
                                 {/* Page Numbers */}
                                 <div className="hidden md:flex items-center gap-1">
                                     {[...Array(pagination.totalPages)].map((_, index) => {
@@ -522,11 +606,10 @@ const LeavingCertificate = () => {
                                                 <button
                                                     key={index}
                                                     onClick={() => handlePageChange(index)}
-                                                    className={`px-3 py-1 rounded-lg font-medium transition-all text-sm ${
-                                                        pagination.page === index
+                                                    className={`px-3 py-1 rounded-lg font-medium transition-all text-sm ${pagination.page === index
                                                             ? 'bg-blue-600 text-white shadow-md'
                                                             : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
-                                                    }`}
+                                                        }`}
                                                 >
                                                     {index + 1}
                                                 </button>
@@ -576,19 +659,44 @@ const LeavingCertificate = () => {
         <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
             <div className='max-w-7xl m-auto mt-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10'>
                 <div>
-                    <h1 className='text-2xl md:text-3xl font-semibold text-gray-800'>Leaving Certificate</h1>
-                    <p className="text-sm text-gray-600 mt-1">Create new student certificate</p>
+                    <h1 className='text-2xl md:text-3xl font-semibold text-gray-800'>
+                        {isEditMode ? 'Edit Leaving Certificate' : 'Leaving Certificate'}
+                    </h1>
+                    <p className="text-sm text-gray-600 mt-1">
+                        {isEditMode ? 'Update certificate information' : 'Create new student certificate'}
+                    </p>
                 </div>
-                <Button
-                    className='bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-all hover:scale-105 flex items-center gap-2 w-full md:w-auto justify-center'
-                    onClick={() => { 
-                        setSearchMode(true); 
-                        fetchRecords(0, ""); 
-                    }}
-                >
-                    <Search className="w-4 h-4" /> Search Records
-                </Button>
+                <div className="flex gap-2 w-full md:w-auto">
+                    {isEditMode && (
+                        <Button
+                            className='bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-all hover:scale-105 flex items-center gap-2 flex-1 md:flex-none justify-center'
+                            onClick={handleCancelEdit}
+                        >
+                            <X className="w-4 h-4" /> Cancel Edit
+                        </Button>
+                    )}
+                    <Button
+                        className='bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-all hover:scale-105 flex items-center gap-2 flex-1 md:flex-none justify-center'
+                        onClick={() => {
+                            setSearchMode(true);
+                            fetchRecords(0, "");
+                        }}
+                    >
+                        <Search className="w-4 h-4" /> Search Records
+                    </Button>
+                </div>
             </div>
+
+            {isEditMode && (
+                <div className="max-w-4xl mx-auto mb-4 bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                    <div className="flex items-center gap-2">
+                        <AlertCircle className="w-5 h-5 text-blue-600" />
+                        <p className="text-sm text-blue-800 font-medium">
+                            You are currently editing: <span className="font-bold">{formData.studentName}</span>
+                        </p>
+                    </div>
+                </div>
+            )}
 
             <div className="max-w-4xl mx-auto bg-white border-2 border-black shadow-2xl">
                 {/* HEADER */}
@@ -661,11 +769,12 @@ const LeavingCertificate = () => {
                                     <tr className="border-b border-black">
                                         <td className="border-r border-black p-2 md:p-3 bg-gray-100 w-1/3 font-semibold text-xs md:text-sm">GR No.</td>
                                         <td className="p-2 md:p-3">
-                                            <input 
-                                                required 
-                                                type="text" 
-                                                name="grNo" 
-                                                value={formData.grNo} 
+                                            <input
+                                                required
+                                                disabled={isEditMode}
+                                                type="text"
+                                                name="grNo"
+                                                value={formData.grNo}
                                                 onChange={handleInputChange}
                                                 className="w-full border-b border-gray-300 focus:outline-none focus:border-black p-1 transition-colors text-sm md:text-base"
                                                 placeholder="Enter GR Number"
@@ -680,12 +789,12 @@ const LeavingCertificate = () => {
                                         <tr className="border-b border-black">
                                             <td className="border-r border-black p-2 md:p-3 bg-gray-100 font-semibold text-xs md:text-sm">Student PEN</td>
                                             <td className="p-2 md:p-3">
-                                                <input 
-                                                    required 
-                                                    type="text" 
-                                                    name="studentPEN" 
-                                                    value={formData.studentPEN} 
-                                                    onChange={handleInputChange} 
+                                                <input
+                                                    required
+                                                    type="text"
+                                                    name="studentPEN"
+                                                    value={formData.studentPEN}
+                                                    onChange={handleInputChange}
                                                     className="w-full border-b border-gray-300 focus:outline-none focus:border-black uppercase p-1 text-sm md:text-base"
                                                     placeholder="Enter PEN"
                                                 />
@@ -694,12 +803,12 @@ const LeavingCertificate = () => {
                                         <tr className="border-b border-black">
                                             <td className="border-r border-black p-2 md:p-3 bg-gray-100 font-semibold text-xs md:text-sm">Student Apaar ID</td>
                                             <td className="p-2 md:p-3">
-                                                <input 
-                                                    required 
-                                                    type="text" 
-                                                    name="studentApaarID" 
-                                                    value={formData.studentApaarID} 
-                                                    onChange={handleInputChange} 
+                                                <input
+                                                    required
+                                                    type="text"
+                                                    name="studentApaarID"
+                                                    value={formData.studentApaarID}
+                                                    onChange={handleInputChange}
                                                     className="w-full border-b border-gray-300 focus:outline-none focus:border-black uppercase p-1 text-sm md:text-base"
                                                     placeholder="Enter Apaar ID"
                                                 />
@@ -708,12 +817,12 @@ const LeavingCertificate = () => {
                                         <tr className="border-b border-black">
                                             <td className="border-r border-black p-2 md:p-3 bg-gray-100 font-semibold text-xs md:text-sm">Student ID</td>
                                             <td className="p-2 md:p-3">
-                                                <input 
-                                                    required 
-                                                    type="text" 
-                                                    name="studentID" 
-                                                    value={formData.studentID} 
-                                                    onChange={handleInputChange} 
+                                                <input
+                                                    required
+                                                    type="text"
+                                                    name="studentID"
+                                                    value={formData.studentID}
+                                                    onChange={handleInputChange}
                                                     className="w-full border-b border-gray-300 focus:outline-none focus:border-black uppercase p-1 text-sm md:text-base"
                                                     placeholder="Enter Student ID"
                                                 />
@@ -726,12 +835,12 @@ const LeavingCertificate = () => {
                                 <tr className="border-b border-black">
                                     <td className="border-r border-black p-2 md:p-3 bg-gray-100 font-semibold text-xs md:text-sm">Unique ID (Aadhar)</td>
                                     <td className="p-2 md:p-3">
-                                        <input 
-                                            required 
-                                            type="text" 
-                                            name="uniqueIDAdhar" 
-                                            value={formData.uniqueIDAdhar} 
-                                            onChange={handleInputChange} 
+                                        <input
+                                            required
+                                            type="text"
+                                            name="uniqueIDAdhar"
+                                            value={formData.uniqueIDAdhar}
+                                            onChange={handleInputChange}
                                             maxLength="12"
                                             pattern="\d{12}"
                                             className="w-full border-b border-gray-300 focus:outline-none focus:border-black uppercase p-1 text-sm md:text-base"
@@ -742,12 +851,12 @@ const LeavingCertificate = () => {
                                 <tr className="border-b border-black">
                                     <td className="border-r border-black p-2 md:p-3 bg-gray-100 text-xs md:text-sm">1) Name of Student</td>
                                     <td className="p-2 md:p-3">
-                                        <input 
-                                            required 
-                                            type="text" 
-                                            name="studentName" 
-                                            value={formData.studentName} 
-                                            onChange={handleInputChange} 
+                                        <input
+                                            required
+                                            type="text"
+                                            name="studentName"
+                                            value={formData.studentName}
+                                            onChange={handleInputChange}
                                             className="w-full border-b border-gray-300 focus:outline-none focus:border-black uppercase p-1 text-sm md:text-base"
                                             placeholder="Enter full name"
                                         />
@@ -756,12 +865,12 @@ const LeavingCertificate = () => {
                                 <tr className="border-b border-black">
                                     <td className="border-r border-black p-2 md:p-3 bg-gray-100 text-xs md:text-sm">2) Mother's Name</td>
                                     <td className="p-2 md:p-3">
-                                        <input 
-                                            required 
-                                            type="text" 
-                                            name="motherName" 
-                                            value={formData.motherName} 
-                                            onChange={handleInputChange} 
+                                        <input
+                                            required
+                                            type="text"
+                                            name="motherName"
+                                            value={formData.motherName}
+                                            onChange={handleInputChange}
                                             className="w-full border-b border-gray-300 focus:outline-none focus:border-black uppercase p-1 text-sm md:text-base"
                                             placeholder="Enter mother's name"
                                         />
@@ -773,22 +882,22 @@ const LeavingCertificate = () => {
                                     <td className="border-r border-black p-2 md:p-3 bg-gray-100 text-xs md:text-sm">3) Nationality</td>
                                     <td className="p-2 md:p-3">
                                         <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
-                                            <input 
-                                                required 
-                                                type="text" 
-                                                name="nationality" 
-                                                value={formData.nationality} 
-                                                onChange={handleInputChange} 
+                                            <input
+                                                required
+                                                type="text"
+                                                name="nationality"
+                                                value={formData.nationality}
+                                                onChange={handleInputChange}
                                                 className="flex-1 border-b border-gray-300 focus:outline-none focus:border-black uppercase p-1 text-sm md:text-base"
                                                 placeholder="Nationality"
                                             />
                                             <span className="text-xs md:text-sm font-semibold whitespace-nowrap self-start sm:self-end sm:mb-1">4) Mother Tongue:</span>
-                                            <input 
-                                                required 
-                                                type="text" 
-                                                name="motherTongue" 
-                                                value={formData.motherTongue} 
-                                                onChange={handleInputChange} 
+                                            <input
+                                                required
+                                                type="text"
+                                                name="motherTongue"
+                                                value={formData.motherTongue}
+                                                onChange={handleInputChange}
                                                 className="flex-1 border-b border-gray-300 focus:outline-none focus:border-black uppercase p-1 text-sm md:text-base"
                                                 placeholder="Mother tongue"
                                             />
@@ -800,12 +909,12 @@ const LeavingCertificate = () => {
                                 <tr className="border-b border-black">
                                     <td className="border-r border-black p-2 md:p-3 bg-gray-100 text-xs md:text-sm">5) Religion</td>
                                     <td className="p-2 md:p-3">
-                                        <input 
-                                            required 
-                                            type="text" 
-                                            name="religion" 
-                                            value={formData.religion} 
-                                            onChange={handleInputChange} 
+                                        <input
+                                            required
+                                            type="text"
+                                            name="religion"
+                                            value={formData.religion}
+                                            onChange={handleInputChange}
                                             className="w-full border-b border-gray-300 focus:outline-none focus:border-black uppercase p-1 text-sm md:text-base"
                                             placeholder="Enter religion"
                                         />
@@ -814,12 +923,12 @@ const LeavingCertificate = () => {
                                 <tr className="border-b border-black">
                                     <td className="border-r border-black p-2 md:p-3 bg-gray-100 text-xs md:text-sm">6) Caste & Sub-Caste</td>
                                     <td className="p-2 md:p-3">
-                                        <input 
-                                            required 
-                                            type="text" 
-                                            name="caste" 
-                                            value={formData.caste} 
-                                            onChange={handleInputChange} 
+                                        <input
+                                            required
+                                            type="text"
+                                            name="caste"
+                                            value={formData.caste}
+                                            onChange={handleInputChange}
                                             className="w-full border-b border-gray-300 focus:outline-none focus:border-black uppercase p-1 text-sm md:text-base"
                                             placeholder="Enter caste"
                                         />
@@ -830,12 +939,12 @@ const LeavingCertificate = () => {
                                 <tr className="border-b border-black">
                                     <td className="border-r border-black p-2 md:p-3 bg-gray-100 text-xs md:text-sm">7) Place of Birth</td>
                                     <td className="p-2 md:p-3">
-                                        <input 
-                                            required 
-                                            type="text" 
-                                            name="placeOfBirth" 
-                                            value={formData.placeOfBirth} 
-                                            onChange={handleInputChange} 
+                                        <input
+                                            required
+                                            type="text"
+                                            name="placeOfBirth"
+                                            value={formData.placeOfBirth}
+                                            onChange={handleInputChange}
                                             className="w-full border-b border-gray-300 focus:outline-none focus:border-black uppercase p-1 text-sm md:text-base"
                                             placeholder="Village/City, Taluka, State"
                                         />
@@ -844,16 +953,16 @@ const LeavingCertificate = () => {
                                 <tr className="border-b border-black">
                                     <td className="border-r border-black p-2 md:p-3 bg-gray-100 text-xs md:text-sm">8) Date of Birth</td>
                                     <td className="p-2 md:p-3">
-                                        <DatePicker 
-                                            selected={formData.dateOfBirth ? parseISO(formData.dateOfBirth) : null} 
-                                            onChange={(date) => handleInputChange("dateOfBirth", formatDate(date))} 
-                                            dateFormat="dd/MM/yyyy" 
-                                            showYearDropdown 
-                                            showMonthDropdown 
-                                            dropdownMode="select" 
+                                        <DatePicker
+                                            selected={formData.dateOfBirth ? new Date(formData.dateOfBirth) : null}
+                                            onChange={(date) => handleInputChange("dateOfBirth", formatDate(date))}
+                                            dateFormat="dd/MM/yyyy"
+                                            showYearDropdown
+                                            showMonthDropdown
+                                            dropdownMode="select"
                                             maxDate={new Date()}
-                                            className="w-full border-b border-gray-300 focus:outline-none focus:border-black uppercase p-1 text-sm md:text-base" 
-                                            placeholderText="Select Date" 
+                                            className="w-full border-b border-gray-300 focus:outline-none focus:border-black uppercase p-1 text-sm md:text-base"
+                                            placeholderText="Select Date"
                                             required
                                         />
                                     </td>
@@ -861,13 +970,13 @@ const LeavingCertificate = () => {
                                 <tr className="border-b border-black">
                                     <td className="border-r border-black p-2 md:p-3 bg-gray-100 text-xs md:text-sm">9) Date of Birth (Words)</td>
                                     <td className="p-2 md:p-3">
-                                        <input 
-                                            required 
-                                            readOnly 
-                                            type="text" 
-                                            name="dateOfBirthWords" 
-                                            value={formData.dateOfBirthWords} 
-                                            className="w-full border-b border-gray-300 bg-blue-50 uppercase p-1 text-gray-700 text-sm md:text-base" 
+                                        <input
+                                            required
+                                            readOnly
+                                            type="text"
+                                            name="dateOfBirthWords"
+                                            value={formData.dateOfBirthWords}
+                                            className="w-full border-b border-gray-300 bg-blue-50 uppercase p-1 text-gray-700 text-sm md:text-base"
                                             placeholder="Auto-generated"
                                         />
                                     </td>
@@ -877,12 +986,12 @@ const LeavingCertificate = () => {
                                 <tr className="border-b border-black">
                                     <td className="border-r border-black p-2 md:p-3 bg-gray-100 text-xs md:text-sm">10) Last School</td>
                                     <td className="p-2 md:p-3">
-                                        <input 
-                                            required 
-                                            type="text" 
-                                            name="lastSchool" 
-                                            value={formData.lastSchool} 
-                                            onChange={handleInputChange} 
+                                        <input
+                                            required
+                                            type="text"
+                                            name="lastSchool"
+                                            value={formData.lastSchool}
+                                            onChange={handleInputChange}
                                             className="w-full border-b border-gray-300 focus:outline-none focus:border-black uppercase p-1 text-sm md:text-base"
                                             placeholder="Enter last school name"
                                         />
@@ -891,15 +1000,15 @@ const LeavingCertificate = () => {
                                 <tr className="border-b border-black">
                                     <td className="border-r border-black p-2 md:p-3 bg-gray-100 text-xs md:text-sm">11) Date of Admission</td>
                                     <td className="p-2 md:p-3">
-                                        <DatePicker 
-                                            selected={formData.dateOfAdmission ? parseISO(formData.dateOfAdmission) : null} 
-                                            onChange={(date) => handleInputChange("dateOfAdmission", formatDate(date))} 
-                                            dateFormat="dd/MM/yyyy" 
-                                            showYearDropdown 
-                                            showMonthDropdown 
+                                        <DatePicker
+                                            selected={formData.dateOfAdmission ? new Date(formData.dateOfAdmission) : null}
+                                            onChange={(date) => handleInputChange("dateOfAdmission", formatDate(date))}
+                                            dateFormat="dd/MM/yyyy"
+                                            showYearDropdown
+                                            showMonthDropdown
                                             maxDate={new Date()}
-                                            className="w-full border-b border-gray-300 focus:outline-none focus:border-black uppercase p-1 text-sm md:text-base" 
-                                            placeholderText="Select Date" 
+                                            className="w-full border-b border-gray-300 focus:outline-none focus:border-black uppercase p-1 text-sm md:text-base"
+                                            placeholderText="Select Date"
                                             required
                                         />
                                     </td>
@@ -908,10 +1017,10 @@ const LeavingCertificate = () => {
                                     <td className="border-r border-black p-2 md:p-3 bg-gray-100 text-xs md:text-sm">12) Progress & Conduct</td>
                                     <td className="p-2 md:p-3">
                                         <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
-                                            <select 
-                                                name="progress" 
-                                                value={formData.progress} 
-                                                onChange={handleInputChange} 
+                                            <select
+                                                name="progress"
+                                                value={formData.progress}
+                                                onChange={handleInputChange}
                                                 required
                                                 className="flex-1 border-b border-gray-300 focus:outline-none focus:border-black p-1 text-sm md:text-base"
                                             >
@@ -921,10 +1030,10 @@ const LeavingCertificate = () => {
                                                 <option value="AVERAGE">Average</option>
                                             </select>
                                             <span className="text-xs md:text-sm font-semibold whitespace-nowrap self-start sm:self-end sm:mb-1">13) Conduct:</span>
-                                            <select 
-                                                name="conduct" 
-                                                value={formData.conduct} 
-                                                onChange={handleInputChange} 
+                                            <select
+                                                name="conduct"
+                                                value={formData.conduct}
+                                                onChange={handleInputChange}
                                                 required
                                                 className="flex-1 border-b border-gray-300 focus:outline-none focus:border-black p-1 text-sm md:text-base"
                                             >
@@ -939,15 +1048,15 @@ const LeavingCertificate = () => {
                                 <tr className="border-b border-black">
                                     <td className="border-r border-black p-2 md:p-3 bg-gray-100 text-xs md:text-sm">14) Date of Leaving</td>
                                     <td className="p-2 md:p-3">
-                                        <DatePicker 
-                                            selected={formData.dateOfLeaving ? parseISO(formData.dateOfLeaving) : null} 
-                                            onChange={(date) => handleInputChange("dateOfLeaving", formatDate(date))} 
-                                            dateFormat="dd/MM/yyyy" 
-                                            showYearDropdown 
-                                            showMonthDropdown 
+                                        <DatePicker
+                                            selected={formData.dateOfLeaving ? new Date(formData.dateOfLeaving) : null}
+                                            onChange={(date) => handleInputChange("dateOfLeaving", formatDate(date))}
+                                            dateFormat="dd/MM/yyyy"
+                                            showYearDropdown
+                                            showMonthDropdown
                                             maxDate={new Date()}
-                                            className="w-full border-b border-gray-300 focus:outline-none focus:border-black uppercase p-1 text-sm md:text-base" 
-                                            placeholderText="Select Date" 
+                                            className="w-full border-b border-gray-300 focus:outline-none focus:border-black uppercase p-1 text-sm md:text-base"
+                                            placeholderText="Select Date"
                                             required
                                         />
                                     </td>
@@ -955,10 +1064,10 @@ const LeavingCertificate = () => {
                                 <tr className="border-b border-black">
                                     <td className="border-r border-black p-2 md:p-3 bg-gray-100 text-xs md:text-sm">15) Standard</td>
                                     <td className="p-2 md:p-3">
-                                        <select 
-                                            name="standard" 
-                                            value={formData.standard} 
-                                            onChange={handleInputChange} 
+                                        <select
+                                            name="standard"
+                                            value={formData.standard}
+                                            onChange={handleInputChange}
                                             required
                                             className="w-full border-b border-gray-300 focus:outline-none focus:border-black p-1 text-sm md:text-base"
                                         >
@@ -975,12 +1084,12 @@ const LeavingCertificate = () => {
                                 <tr className="border-b border-black">
                                     <td className="border-r border-black p-2 md:p-3 bg-gray-100 text-xs md:text-sm">16) Reason</td>
                                     <td className="p-2 md:p-3">
-                                        <input 
-                                            required 
-                                            type="text" 
-                                            name="reasonForLeaving" 
-                                            value={formData.reasonForLeaving} 
-                                            onChange={handleInputChange} 
+                                        <input
+                                            required
+                                            type="text"
+                                            name="reasonForLeaving"
+                                            value={formData.reasonForLeaving}
+                                            onChange={handleInputChange}
                                             className="w-full border-b border-gray-300 focus:outline-none focus:border-black uppercase p-1 text-sm md:text-base"
                                             placeholder="Reason for leaving"
                                         />
@@ -989,12 +1098,12 @@ const LeavingCertificate = () => {
                                 <tr className="border-b border-black">
                                     <td className="border-r border-black p-2 md:p-3 bg-gray-100 text-xs md:text-sm">17) Remarks</td>
                                     <td className="p-2 md:p-3">
-                                        <input 
-                                            required 
-                                            type="text" 
-                                            name="remarks" 
-                                            value={formData.remarks} 
-                                            onChange={handleInputChange} 
+                                        <input
+                                            required
+                                            type="text"
+                                            name="remarks"
+                                            value={formData.remarks}
+                                            onChange={handleInputChange}
                                             className="w-full border-b border-gray-300 focus:outline-none focus:border-black uppercase p-1 text-sm md:text-base"
                                             placeholder="Enter remarks"
                                         />
@@ -1013,14 +1122,23 @@ const LeavingCertificate = () => {
                             {saveLoading ? (
                                 <span className="flex items-center justify-center gap-2">
                                     <Loader2 className="animate-spin w-5 h-5" />
-                                    SAVING...
+                                    {isEditMode ? 'UPDATING...' : 'SAVING...'}
                                 </span>
                             ) : (
                                 <span className="flex items-center justify-center gap-2">
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-                                    </svg>
-                                    SAVE CERTIFICATE
+                                    {isEditMode ? (
+                                        <>
+                                            <Edit className="w-5 h-5" />
+                                            UPDATE CERTIFICATE
+                                        </>
+                                    ) : (
+                                        <>
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                                            </svg>
+                                            SAVE CERTIFICATE
+                                        </>
+                                    )}
                                 </span>
                             )}
                         </Button>

@@ -27,6 +27,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+
 
 @RestController
 @RequestMapping("/leavingcertificate")
@@ -45,6 +47,12 @@ public class LeavingCertificateController {
         System.out.println("Inside LeavingCertificateController createLC" + entity);
         return ResponseEntity.ok().body(leavingCertificateService.createLC(entity));
     }
+
+    @GetMapping("getLcbyid/{id}")
+    public ResponseEntity<ApiResponse<LeavingCertificateDTO>> getLcById(@PathVariable Long id) {
+        return ResponseEntity.ok().body(leavingCertificateService.getLCById(id));
+    }
+    
 
     @GetMapping("/getAllLC")
     public ResponseEntity<ApiResponse<List<LCResponseDTO>>> getMethodName() {
@@ -86,5 +94,14 @@ public class LeavingCertificateController {
 
         return ResponseEntity.ok().body(leavingCertificateService.searchLC(search, PageRequest.of(page, size)));
     }
+
+
+    @PutMapping("/updateLC/{id}")
+    public ResponseEntity<ApiResponse<Void>> updateLC(@PathVariable Long id, @RequestBody LeavingCertificateDTO entity) {
+        //TODO: process POST request
+        
+        return ResponseEntity.ok().body(leavingCertificateService.updateLC(id, entity));
+    }
+    
 
 }

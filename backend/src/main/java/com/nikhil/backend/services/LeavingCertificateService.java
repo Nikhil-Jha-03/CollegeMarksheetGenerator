@@ -21,4 +21,8 @@ public interface LeavingCertificateService {
 
     ApiResponse<PageResponse<LCResponseDTO>> searchLC(String search, @NonNull Pageable pageable);
 
+    ApiResponse<Void> updateLC(Long id, LeavingCertificateDTO entity);
+
+    ApiResponse<LeavingCertificateDTO> getLCById(Long id);
+
 }

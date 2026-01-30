@@ -7,13 +7,14 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
@@ -29,7 +30,6 @@ import com.nikhil.backend.repository.LeavingCertificateRepository;
 import com.nikhil.backend.services.LeavingCertificateService;
 import com.nikhil.backend.specification.LeavingCertificateSpecification;
 
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -241,7 +241,10 @@ public class LeavingCertificateImplementation implements LeavingCertificateServi
     @Override
     public ApiResponse<List<LCResponseDTO>> getAllLC() {
         try {
-            List<LeavingCertificate> entities = leavingCertificateRepository.findAll();
+            Pageable pageable = PageRequest.of(0, 5, Sort.by(Sort.Direction.DESC, "id"));
+            List<LeavingCertificate> entities = leavingCertificateRepository
+                    .findAll(pageable)
+                    .getContent();
 
             if (entities.isEmpty()) {
                 return new ApiResponse<>(false, "No LC records found", null);
@@ -259,9 +262,10 @@ public class LeavingCertificateImplementation implements LeavingCertificateServi
                             .studentName(entity.getStudentName())
                             .standard(entity.getStandard())
                             .build())
-                    .collect(Collectors.toList());
+                    .toList();
 
-            return new ApiResponse<>(true, "Fetched all LC records successfully", responseDTOs);
+            return new ApiResponse<>(true, "Fetched LC records successfully", responseDTOs);
+
         } catch (Exception e) {
             return new ApiResponse<>(false, "Error retrieving LC records: " + e.getMessage(), null);
         }
@@ -670,6 +674,111 @@ public class LeavingCertificateImplementation implements LeavingCertificateServi
                 dtoPage.getTotalPages());
 
         return new ApiResponse<>(true, "Search successful", pageResponse);
+    }
+
+    @Override
+    public ApiResponse<Void> updateLC(Long id, LeavingCertificateDTO entity) {
+
+        try {
+            LeavingCertificate lc = leavingCertificateRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("LC not found for id: " + id));
+
+            // ---------------- VALIDATION ----------------
+            ApiResponse<Void> validationResponse = validateLeavingCertificateDTO(entity);
+            if (!validationResponse.isSuccess()) {
+                return validationResponse;
+            }
+
+            // ---------------- DUPLICATE CHECKS ----------------
+
+            // Aadhaar check (for ALL students)
+            if (entity.getUniqueIDAdhar() != null && !entity.getUniqueIDAdhar().isBlank()) {
+                boolean aadhaarExists = leavingCertificateRepository
+                        .existsByUniqueIDAdharAndIdNot(entity.getUniqueIDAdhar().trim(), id);
+
+                if (aadhaarExists) {
+                    return new ApiResponse<>(false,
+                            "Aadhaar ID already exists for another student", null);
+                }
+            }
+
+            boolean isRegularStudent = "FOR REGULAR STUDENT"
+                    .equalsIgnoreCase(entity.getStudentType());
+
+            // GR No check (ONLY for regular students)
+            if (isRegularStudent) {
+                if (entity.getGrNo() == null || entity.getGrNo().isBlank()) {
+                    return new ApiResponse<>(false,
+                            "GR No is required for regular student", null);
+                }
+
+                boolean grExists = leavingCertificateRepository
+                        .existsByGrNoAndIdNot(entity.getGrNo().trim(), id);
+
+                if (grExists) {
+                    return new ApiResponse<>(false,
+                            "GR No already exists for another student", null);
+                }
+            }
+
+            // ---------------- UPDATE COMMON FIELDS ----------------
+            lc.setStudentType(entity.getStudentType().trim());
+            lc.setUniqueIDAdhar(entity.getUniqueIDAdhar().trim());
+            lc.setStudentName(entity.getStudentName().trim().toUpperCase());
+            lc.setMotherName(entity.getMotherName().trim().toUpperCase());
+            lc.setNationality(entity.getNationality().trim().toUpperCase());
+            lc.setMotherTongue(entity.getMotherTongue().trim().toUpperCase());
+            lc.setReligion(entity.getReligion().trim().toUpperCase());
+            lc.setCaste(entity.getCaste().trim().toUpperCase());
+            lc.setProgress(entity.getProgress().trim().toUpperCase());
+            lc.setConduct(entity.getConduct().trim().toUpperCase());
+            lc.setPlaceOfBirth(entity.getPlaceOfBirth().trim().toUpperCase());
+            lc.setDateOfBirth(entity.getDateOfBirth());
+            lc.setDateOfBirthWords(entity.getDateOfBirthWords().trim().toUpperCase());
+            lc.setLastSchool(entity.getLastSchool().trim().toUpperCase());
+            lc.setDateOfAdmission(entity.getDateOfAdmission());
+            lc.setDateOfLeaving(entity.getDateOfLeaving());
+            lc.setStandard(entity.getStandard().trim().toUpperCase());
+            lc.setReasonForLeaving(entity.getReasonForLeaving().trim().toUpperCase());
+            lc.setRemarks(entity.getRemarks().trim().toUpperCase());
+            lc.setIsDuplicate(entity.getIsDuplicate());
+
+            // ---------------- CONDITIONAL FIELDS ----------------
+            if (!isRegularStudent) {
+                // PRIVATE STUDENT
+                lc.setGrNo(null);
+                lc.setStudentPEN(null);
+                lc.setStudentApaarID(null);
+                lc.setStudentID(null);
+            } else {
+                // REGULAR STUDENT
+                lc.setGrNo(entity.getGrNo().trim());
+                lc.setStudentPEN(entity.getStudentPEN() != null ? entity.getStudentPEN().trim() : null);
+                lc.setStudentApaarID(entity.getStudentApaarID() != null ? entity.getStudentApaarID().trim() : null);
+                lc.setStudentID(entity.getStudentID() != null ? entity.getStudentID().trim() : null);
+            }
+
+            leavingCertificateRepository.save(lc);
+
+            return new ApiResponse<>(true, "LC updated successfully", null);
+
+        } catch (Exception e) {
+            return new ApiResponse<>(false,
+                    "Error updating LC: " + e.getMessage(), null);
+        }
+    }
+
+    @Override
+    public ApiResponse<LeavingCertificateDTO> getLCById(Long id) {
+        try {
+            LeavingCertificate lc = leavingCertificateRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("LC not found for id: " + id));
+            LeavingCertificateDTO dto = modelMapper.map(lc, LeavingCertificateDTO.class);
+            return new ApiResponse<>(true, "LC retrieved successfully", dto);
+        } catch (Exception e) {
+            return new ApiResponse<>(false, "Error retrieving LC: " + e.getMessage(), null);
+        }
+
     }
 
 }

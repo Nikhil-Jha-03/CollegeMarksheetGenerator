@@ -41,13 +41,14 @@ public class LeavingCertificate {
     // --------------------
     // Identification
     // --------------------
+    @Column(name = "gr_no", unique = true)
     private String grNo;
 
     private Boolean isDuplicate;
 
     private String studentPEN;
 
-    @Column(name = "unique_id_adhar")
+    @Column(name = "unique_id_adhar", unique = true)
     private String uniqueIDAdhar;
 
     private String studentApaarID;
