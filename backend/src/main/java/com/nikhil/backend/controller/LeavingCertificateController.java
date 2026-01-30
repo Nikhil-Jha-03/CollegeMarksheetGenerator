@@ -98,8 +98,6 @@ public class LeavingCertificateController {
 
     @PutMapping("/updateLC/{id}")
     public ResponseEntity<ApiResponse<Void>> updateLC(@PathVariable Long id, @RequestBody LeavingCertificateDTO entity) {
-        //TODO: process POST request
-        
         return ResponseEntity.ok().body(leavingCertificateService.updateLC(id, entity));
     }
     

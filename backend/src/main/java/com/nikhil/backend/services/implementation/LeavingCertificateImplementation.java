@@ -30,8 +30,10 @@ import com.nikhil.backend.repository.LeavingCertificateRepository;
 import com.nikhil.backend.services.LeavingCertificateService;
 import com.nikhil.backend.specification.LeavingCertificateSpecification;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
+@Transactional
 @Service
 @RequiredArgsConstructor
 public class LeavingCertificateImplementation implements LeavingCertificateService {
@@ -53,6 +55,17 @@ public class LeavingCertificateImplementation implements LeavingCertificateServi
             boolean isPrivateStudent = "FOR PRIVATE STUDENT".equalsIgnoreCase(entity.getStudentType());
             LeavingCertificate lc = new LeavingCertificate();
 
+            if (leavingCertificateRepository.existsByUniqueIDAdhar(entity.getUniqueIDAdhar().trim())) {
+                return new ApiResponse<>(false, "Aadhaar ID already exists", null);
+            }
+
+            // GR No duplicate check (only regular student)
+            if (!isPrivateStudent && entity.getGrNo() != null) {
+                if (leavingCertificateRepository.existsByGrNo(entity.getGrNo().trim())) {
+                    return new ApiResponse<>(false, "GR No already exists", null);
+                }
+            }
+
             // -------- COMMON FIELDS (same for both) --------
             lc.setStudentType(entity.getStudentType().trim());
             lc.setUniqueIDAdhar(entity.getUniqueIDAdhar().trim());
@@ -64,7 +77,7 @@ public class LeavingCertificateImplementation implements LeavingCertificateServi
             lc.setCaste(entity.getCaste().trim().toUpperCase());
             lc.setProgress(entity.getProgress().trim().toUpperCase());
             lc.setConduct(entity.getConduct().trim().toUpperCase());
-            lc.setPlaceOfBirth(entity.getPlaceOfBirth().trim().toLowerCase());
+            lc.setPlaceOfBirth(entity.getPlaceOfBirth().trim().toUpperCase());
             lc.setDateOfBirth(entity.getDateOfBirth());
             lc.setDateOfBirthWords(entity.getDateOfBirthWords().trim().toUpperCase());
             lc.setLastSchool(entity.getLastSchool().trim().toUpperCase());
@@ -193,7 +206,7 @@ public class LeavingCertificateImplementation implements LeavingCertificateServi
         // Validate student type
         if (!isValidStudentType(dto.getStudentType())) {
             return new ApiResponse<>(false,
-                    "Invalid Student Type. Allowed values: 'FOR PRIVATE STUDENT' or 'REGULAR STUDENT'", null);
+                    "Allowed values: 'FOR PRIVATE STUDENT' or 'FOR REGULAR STUDENT'", null);
         }
 
         // Validate date logic
@@ -563,14 +576,15 @@ public class LeavingCertificateImplementation implements LeavingCertificateServi
 
                 .info-table { width: 100%; border-collapse: collapse; border: 1px solid #000; }
                 .info-table td { border: 1px solid #000; padding: 4px 6px; font-size: 8.5pt; vertical-align: middle; }
-                .label-cell { width: 30%; font-weight: normal; }
+                .label-cell { width: 30%; font-weight: normal; background-color: #e5e5e5; }
                 .value-cell { font-weight: 600; text-transform: uppercase; }
 
                 .footer-wrapper {
                     position: absolute;
-                    bottom: 0;
+                    bottom: 70px;
                     left: 0;
                     width: 100%;
+                    padding: 0 20px;
                 }
 
                 .note {
@@ -578,7 +592,7 @@ public class LeavingCertificateImplementation implements LeavingCertificateServi
                     text-align: justify;
                     line-height: 1.4;
                     padding-bottom: 5px;
-                    padding-top: 5px;
+                    padding-top: 8px;
                     margin-bottom: 30px; /* Space between note and signatures */
                 }
 
@@ -591,22 +605,6 @@ public class LeavingCertificateImplementation implements LeavingCertificateServi
                 .sig-table td:nth-child(2) { text-align: center; }
                 .sig-table td:last-child { text-align: right; }
                 """;
-    }
-
-    /**
-     * Converts HTML to PDF using Flying Saucer (iText Renderer)
-     */
-    private byte[] convertHtmlToPdf(String htmlContent) throws Exception {
-        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-            // Set converter properties for better rendering
-            ConverterProperties converterProperties = new ConverterProperties();
-            converterProperties.setBaseUri("classpath:/static/");
-
-            HtmlConverter.convertToPdf(htmlContent, outputStream, converterProperties);
-            return outputStream.toByteArray();
-        } catch (Exception e) {
-            throw new RuntimeException("Error generating PDF: " + e.getMessage(), e);
-        }
     }
 
     /**
