@@ -29,4 +29,8 @@ public interface StudentService {
 
     ApiResponse<Void> deleteAll();
 
+    byte[] generateHallTicket(Long grno);
+
+    byte[] batchHallTicketDownload();
+
 }

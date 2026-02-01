@@ -103,4 +103,4 @@ console.log(student)
     );
 }
 
-export default Templete
+export default Templete;

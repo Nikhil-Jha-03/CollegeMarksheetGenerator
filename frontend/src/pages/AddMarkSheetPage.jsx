@@ -69,7 +69,6 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
     return `${yyyy}-${mm}-${dd}`;
   };
 
-
   const fetchClasses = async () => {
     try {
       setLoading(true);
@@ -249,8 +248,6 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
     }));
   }, [student.subjects]);
 
-
-
   const handleSave = async () => {
     if (isSaving) return;
     if (!student.name || !student.motherName || !student.studentClass || !student.dob || !student.grNo || !student.annualResult) {
@@ -310,7 +307,6 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
   };
 
   const debouncedHandleSave = useMemo(() => debounce(handleSave, 1200), [handleSave]);
-
 
   useEffect(() => {
     calculateMarks();

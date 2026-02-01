@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import api from '../api/axios';
 import { toast } from 'react-toastify';
-import { Trash, Loader2, CloudFog, X } from 'lucide-react';
+import { Trash, Loader2, CloudFog, X, FileText, Download } from 'lucide-react';
 import Templete from './Templete'
 import Swal from "sweetalert2";;
 import { useNavigate } from 'react-router-dom';
@@ -22,13 +22,16 @@ const StoredStudentDetails = () => {
     const [previewData, setPreviewData] = useState({})
     const [searchBy, setSearchBy] = useState('')
     const [search, setSearch] = useState('')
-    
+
     // Loading states for buttons
     const [downloadingAll, setDownloadingAll] = useState(false);
     const [downloadingExcel, setDownloadingExcel] = useState(false);
     const [deletingAll, setDeletingAll] = useState(false);
+    const [batchHallTicket, setBatchHallTicket] = useState(false);
     const [downloadingStudent, setDownloadingStudent] = useState({});
     const [deletingStudent, setDeletingStudent] = useState({});
+    const [GenerateHallTicket, setGenerateHallTicket] = useState({});
+
 
 
     const allowedKeys = [
@@ -399,6 +402,63 @@ const StoredStudentDetails = () => {
         }
     };
 
+    const handleGenerateHallTicket = async (student) => {
+        setGenerateHallTicket(prev => ({ ...prev, [student.grNo]: true }));
+
+        try {
+            const response = await api.get(`/student/hallTicket/${student.grNo}`, {
+                responseType: 'blob',
+                withCredentials: true
+            });
+            const blob = new Blob([response.data], { type: 'application/pdf' });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `hall_ticket_${student.grNo}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+
+            toast.success("hall Ticket Downloaded" )
+
+        } catch (error) {
+            toast.error("Something Went Wrong")
+        } finally {
+            setGenerateHallTicket(prev => ({ ...prev, [student.grNo]: false }));
+        }
+
+    };
+
+    const batchLcDownload = async () => {
+        setBatchHallTicket(true)
+
+        try {
+            const response = await api.get("/student/batchHallTicketDownload", { withCredentials: true, responseType: 'blob' })
+
+            const blob = new Blob([response.data], { type: 'application/zip' })
+            const url = window.URL.createObjectURL(blob);
+
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = "students_Hall_Ticket.zip";
+
+            document.body.appendChild(link);
+            link.click();
+
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+
+            toast.success("Result Downloaded")
+        } catch (error) {
+            toast.error("Something went wrong")
+
+        } finally {
+            setBatchHallTicket(false)
+        }
+
+    }
+
     // ------------ DEBOUNCE FETCH -------------
     useEffect(() => {
         clearTimeout(timeoutRef.current);
@@ -426,7 +486,6 @@ const StoredStudentDetails = () => {
             </div>
         );
     }
-
 
     return (
         <div className="p-6">
@@ -470,8 +529,6 @@ const StoredStudentDetails = () => {
                         </label>
 
 
-
-
                         <div className='flex gap-4'>
                             {/* Page Info */}
                             <div className='flex gap-2 items-center text-sm'>
@@ -482,8 +539,8 @@ const StoredStudentDetails = () => {
                             </div>
                             {/* Download All */}
                             <div>
-                                <span className='cursor-pointer' onClick={handleDownloadAll}>
-                                    <Button disabled={downloadingAll}>
+                                <span onClick={handleDownloadAll}>
+                                    <Button className="cursor-pointer" disabled={downloadingAll}>
                                         {downloadingAll && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                                         Download All
                                     </Button>
@@ -492,8 +549,8 @@ const StoredStudentDetails = () => {
 
                             {/* Excel Download */}
                             <div>
-                                <span className='cursor-pointer' onClick={downloadExcel}>
-                                    <Button disabled={downloadingExcel}>
+                                <span onClick={downloadExcel}>
+                                    <Button className='cursor-pointer' disabled={downloadingExcel}>
                                         {downloadingExcel && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                                         Excel Download
                                     </Button>
@@ -501,13 +558,23 @@ const StoredStudentDetails = () => {
                             </div>
 
                             <div>
-                                <span className='cursor-pointer' onClick={handleDeleteAll}>
-                                    <Button variant="destructive" disabled={deletingAll}>
+                                <span onClick={batchLcDownload}>
+                                    <Button className='cursor-pointer' disabled={batchHallTicket}>
+                                        {batchHallTicket && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                                        Hall Ticket Downlaod
+                                    </Button>
+                                </span>
+                            </div>
+
+                            <div>
+                                <span onClick={handleDeleteAll}>
+                                    <Button className='cursor-pointer' variant="destructive" disabled={deletingAll}>
                                         {deletingAll && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                                         Delete All Student Record
                                     </Button>
                                 </span>
                             </div>
+
                         </div>
 
 
@@ -575,18 +642,19 @@ const StoredStudentDetails = () => {
                     <div className='w-7xl m-auto table-fade mt-9'>
                         <table className="border-collapse border border-gray-300 mt-5 shadow-lg ">
                             <thead>
-                            <tr className="bg-linear-to-r from-gray-50 to-gray-100 border-b border-gray-200">
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">GR No</th>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Name</th>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Mother's Name</th>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Class</th>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Percentage</th>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Result</th>
-                                <th className="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Preview</th>
-                                <th className="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Edit</th>
-                                <th className="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Print</th>
-                                <th className="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Delete</th>
-                            </tr>
+                                <tr className="bg-linear-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">GR No</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Name</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Mother's Name</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Class</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Percentage</th>
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Result</th>
+                                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Preview</th>
+                                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Edit</th>
+                                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Print</th>
+                                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Delete</th>
+                                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Hall Ticket</th>
+                                </tr>
                             </thead>
 
                             <tbody>
@@ -610,8 +678,8 @@ const StoredStudentDetails = () => {
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span
                                                 className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${student.result === 'Pass'
-                                                        ? 'bg-green-100 text-green-800'
-                                                        : 'bg-red-100 text-red-800'
+                                                    ? 'bg-green-100 text-green-800'
+                                                    : 'bg-red-100 text-red-800'
                                                     }`}
                                             >
                                                 {student.result}
@@ -638,8 +706,8 @@ const StoredStudentDetails = () => {
                                             <span onClick={() => {
                                                 handleDownload(student.grNo || null)
                                             }}>
-                                                <Button 
-                                                    className="cursor-pointer" 
+                                                <Button
+                                                    className="cursor-pointer"
                                                     disabled={downloadingStudent[student.grNo]}
                                                 >
                                                     {downloadingStudent[student.grNo] && (
@@ -654,8 +722,8 @@ const StoredStudentDetails = () => {
                                             <span onClick={() => {
                                                 handleDelete(student.grNo || null)
                                             }}>
-                                                <Button 
-                                                    className="cursor-pointer" 
+                                                <Button
+                                                    className="cursor-pointer"
                                                     variant="destructive"
                                                     disabled={deletingStudent[student.grNo]}
                                                 >
@@ -665,6 +733,26 @@ const StoredStudentDetails = () => {
                                                         <Trash className="h-4 w-4 mr-1" />
                                                     )}
                                                     Delete
+                                                </Button>
+                                            </span>
+                                        </td>
+
+                                        <td className="px-6 py-4 whitespace-nowrap flex justify-center">
+                                            <span
+                                                onClick={() => {
+                                                    handleGenerateHallTicket(student)
+                                                }}
+                                            >
+                                                <Button
+                                                    className="cursor-pointer"
+                                                    variant="outline"
+                                                    disabled={GenerateHallTicket[student.grNo]}
+                                                >
+                                                    {GenerateHallTicket[student.grNo] ? (
+                                                        <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                                                    ) : (
+                                                        <Download className="h-4 w-4 mr-1" />
+                                                    )}
                                                 </Button>
                                             </span>
                                         </td>

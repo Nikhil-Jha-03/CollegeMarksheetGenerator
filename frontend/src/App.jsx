@@ -12,6 +12,7 @@ import useAuth from './hooks/useAuth.js'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import { Loader2 } from 'lucide-react'
 import LeavingCertificate from './pages/LeavingCertificate'
+import NotAdmin from './pages/NotAdmin'
 
 
 function App() {
@@ -37,6 +38,10 @@ function App() {
     return <LoginPage />;
   }
 
+  if ( user && user.role !== "ADMIN") {
+    return <NotAdmin />;
+  }
+
 
 
   return (
@@ -60,4 +65,4 @@ function App() {
 }
 
 
-export default App
+export default App;
