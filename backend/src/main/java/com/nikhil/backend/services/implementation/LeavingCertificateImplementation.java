@@ -468,9 +468,9 @@ public class LeavingCertificateImplementation implements LeavingCertificateServi
 
                                         <table class="sig-table">
                                             <tr>
-                                                <td style="text-align:left; padding-left:10px;">Class Teacher:</td>
-                                                <td style="text-align:center;">Clerk</td>
-                                                <td style="text-align:right; padding-right:10px;">Principal</td>
+                                                <td>Class Teacher:</td>
+                                                <td>Clerk</td>
+                                                <td>Principal</td>
                                             </tr>
                                         </table>
 
@@ -600,10 +600,21 @@ public class LeavingCertificateImplementation implements LeavingCertificateServi
                     width: 100%;
                     table-layout: fixed; /* Ensures equal width for centering Clerk */
                 }
-                .sig-table td { font-weight: bold; font-size: 10pt; vertical-align: bottom; }
-                .sig-table td:first-child { text-align: left; }
+                .sig-table td { 
+                    font-weight: bold; 
+                    font-size: 10pt; 
+                    vertical-align: bottom;
+                    width: 33.33%; /* ADD THIS LINE */
+                }
+                .sig-table td:first-child { 
+                    text-align: left;
+                    padding-left: 0; /* ADD THIS LINE */
+                }
                 .sig-table td:nth-child(2) { text-align: center; }
-                .sig-table td:last-child { text-align: right; }
+                .sig-table td:last-child { 
+                    text-align: right;
+                    padding-right: 0; /* ADD THIS LINE */
+                }
                 """;
     }
 
