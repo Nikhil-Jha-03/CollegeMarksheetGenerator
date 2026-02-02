@@ -722,12 +722,12 @@ const LeavingCertificate = ({ editMode = false }) => {
                             <p>Address: Sr. No. 28/1/1, Village Handewadi/Saunde, off Katraj - Saswad by pass Road</p>
                             <p>Tal:- Haveli, Po:- Urli-Devachi, Pin. No. - 412308</p>
                             <p>Phone No. : +91 – 9970886904</p>
-                            <p>Website: www.pragnyacollege.com / Email: Pragnja@gmail.com</p>
+                            <p>Website: www.pragnyacollege.com / Email: Pragnyajc1@gmail.com</p>
                         </div>
 
                         <div className="flex justify-between items-center mt-2 md:mt-3 text-[10px] md:text-xs font-bold border-t border-black pt-1 px-2 md:px-4">
                             <span>INDEX NO.:- J11.15.092</span>
-                            <span>DISE NO: - 27250500703</span>
+                            <span>U-DISE NO: - 27250500703</span>
                         </div>
                     </div>
                 </div>

@@ -370,7 +370,7 @@ public class LeavingCertificateImplementation implements LeavingCertificateServi
                                                     </div>
                                                     <div class="contact-line">
                                                         Phone No. - +91 – 9970888604<br>
-                                                        Website: www.pragnyacollege.com | Email: Pragnyajc@gmail.com
+                                                        Website: www.pragnyacollege.com / Email: Pragnyajc1@gmail.com
                                                     </div>
                                                 </div>
                                             </div>
