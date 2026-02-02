@@ -9,8 +9,6 @@ import DatePicker from "react-datepicker";
 import { parseISO } from "date-fns";
 
 
-
-
 function debounce(fn, delay = 1000) {
   let timer;
   return (...args) => {
@@ -18,7 +16,6 @@ function debounce(fn, delay = 1000) {
     timer = setTimeout(() => fn(...args), delay);
   };
 }
-
 
 const MarkSheetFormPage = ({ mode = 'add' }) => {
   const { studentId } = useParams();
@@ -160,22 +157,20 @@ const MarkSheetFormPage = ({ mode = 'add' }) => {
 
 
   const handleClassChange = (value) => {
-    const classId = parseInt(value);
-    const selectedClass = classDisplay.find(item => item.classId === classId);
+  const classId = parseInt(value);
+  const selectedClass = classDisplay.find(item => item.classId === classId);
 
-    if (selectedClass) {
-      setStudent(prev => ({
-        ...prev,
-        studentClass: selectedClass.className,
-        subjects: isEditMode ? prev.subjects : [] // Keep subjects in edit mode
-      }));
+  if (selectedClass) {
+    setStudent(prev => ({
+      ...prev,
+      studentClass: selectedClass.className,
+      subjects: [] // Clear old subjects
+    }));
 
-      // Only fetch new subjects if in add mode
-      if (!isEditMode) {
-        fetchSubjects(classId);
-      }
-    }
-  };
+    // Fetch new subjects for the selected class
+    fetchSubjects(classId);
+  }
+};
 
   const addSubject = () => {
     setStudent(prev => ({
