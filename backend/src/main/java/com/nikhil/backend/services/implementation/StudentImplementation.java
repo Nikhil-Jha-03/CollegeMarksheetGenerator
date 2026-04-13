@@ -21,7 +21,6 @@ import org.springframework.stereotype.Service;
 
 import com.itextpdf.html2pdf.ConverterProperties;
 import com.itextpdf.html2pdf.HtmlConverter;
-import com.nikhil.backend.BackendApplication;
 import com.nikhil.backend.dto.FinalStudentDetailDTO;
 import com.nikhil.backend.dto.PageResponse;
 import com.nikhil.backend.dto.StudentDetailDTO;
@@ -802,9 +801,9 @@ public class StudentImplementation implements StudentService {
         }
     }
 
-    private String safe(Object val) {
-        return val == null ? "" : val.toString();
-    }
+    // private String safe(Object val) {
+    //     return val == null ? "" : val.toString();
+    // }
 
     private byte[] helperGenHT(FinalStudentDetailDTO student) {
         try {

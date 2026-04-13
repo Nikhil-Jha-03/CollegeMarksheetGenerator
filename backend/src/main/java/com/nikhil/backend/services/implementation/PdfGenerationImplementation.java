@@ -3,6 +3,7 @@ package com.nikhil.backend.services.implementation;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.List;
@@ -112,9 +113,12 @@ public class PdfGenerationImplementation implements PdfGenerationService {
                 ? student.getDob().format(dateFormatter)
                 : "";
 
-        String dateOfIssue = student.getDateOfIssue() != null
-                ? student.getDateOfIssue().format(dateFormatter)
-                : "";
+        // String dateOfIssue = student.getDateOfIssue() != null
+        //         ? student.getDateOfIssue().format(dateFormatter)
+        //         : "";
+
+
+        String dateOfIssue = LocalDate.now().format(dateFormatter);
 
         // Get logo as base64
         String logoBase64 = getLogoAsBase64();

@@ -20,7 +20,7 @@ const StoredStudentDetails = () => {
     const [loading, setLoading] = useState(true);
     const [preview, setPreview] = useState(false)
     const [previewData, setPreviewData] = useState({})
-    const [searchBy, setSearchBy] = useState('')
+    const [searchBy, setSearchBy] = useState('rollNo')
     const [search, setSearch] = useState('')
 
     // Loading states for buttons
@@ -588,7 +588,7 @@ const StoredStudentDetails = () => {
 
                             <select
                                 onChange={(e) => setSearchBy(e.currentTarget.value)}
-                                defaultValue={searchBy}
+                                value={searchBy}
                                 className='text-sm rounded-md border px-2 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-ring' name="grNo" id="searchBy">
                                 <option value=""> Select Search Type </option>
                                 {allowedKeys.map((key) => (
