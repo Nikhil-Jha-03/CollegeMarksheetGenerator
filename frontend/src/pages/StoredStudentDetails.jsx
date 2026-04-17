@@ -639,7 +639,7 @@ const StoredStudentDetails = () => {
                 ) : studentsData.length > 0 ? (
 
 
-                    <div className='w-full m-auto table-fade mt-9 px-4'>
+                    <div className='w-7xl m-auto table-fade mt-9 px-4'>
                         <table className="min-w-full border-collapse border border-gray-300 mt-5 shadow-lg">
                             <thead>
                                 <tr className="bg-linear-to-r from-gray-50 to-gray-100 border-b border-gray-200">
