@@ -420,7 +420,7 @@ const StoredStudentDetails = () => {
             document.body.removeChild(link);
             window.URL.revokeObjectURL(url);
 
-            toast.success("hall Ticket Downloaded" )
+            toast.success("hall Ticket Downloaded")
 
         } catch (error) {
             toast.error("Something Went Wrong")
@@ -639,15 +639,13 @@ const StoredStudentDetails = () => {
                 ) : studentsData.length > 0 ? (
 
 
-                    <div className='w-7xl m-auto table-fade mt-9'>
-                        <table className="border-collapse border border-gray-300 mt-5 shadow-lg w-full">
+                    <div className='w-full m-auto table-fade mt-9 px-4'>
+                        <table className="min-w-full border-collapse border border-gray-300 mt-5 shadow-lg">
                             <thead>
                                 <tr className="bg-linear-to-r from-gray-50 to-gray-100 border-b border-gray-200">
                                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">GR No</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Name</th>
-                                    {/* <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Mother's Name</th> */}
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider w-full">Name</th>
                                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Class</th>
-                                    {/* <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Percentage</th> */}
                                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Result</th>
                                     <th className="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Preview</th>
                                     <th className="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Edit</th>
@@ -663,23 +661,17 @@ const StoredStudentDetails = () => {
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                             {student.grNo}
                                         </td>
-                                        <td className="px-4 py-3 max-w-[250px] truncate text-sm text-gray-900">
+                                        <td className="px-4 py-3 w-full text-sm text-gray-900">
                                             {student.name}
                                         </td>
-                                        {/* <td className="px-4 py-3 max-w-[150px] truncate text-sm text-gray-900">
-                                            {student.motherName}
-                                        </td> */}
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                             {student.studentClass}
                                         </td>
-                                        {/* <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                                            {student.percentage}%
-                                        </td> */}
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span
                                                 className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${student.result === 'Pass'
-                                                    ? 'bg-green-100 text-green-800'
-                                                    : 'bg-red-100 text-red-800'
+                                                        ? 'bg-green-100 text-green-800'
+                                                        : 'bg-red-100 text-red-800'
                                                     }`}
                                             >
                                                 {student.result}
@@ -693,23 +685,14 @@ const StoredStudentDetails = () => {
                                         </td>
 
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <span onClick={() => {
-                                                handleEdit(student.grNo || null)
-                                            }}>
-                                                <Button className="cursor-pointer" variant="secondary">
-                                                    Edit
-                                                </Button>
+                                            <span onClick={() => handleEdit(student.grNo || null)}>
+                                                <Button className="cursor-pointer" variant="secondary">Edit</Button>
                                             </span>
                                         </td>
 
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <span onClick={() => {
-                                                handleDownload(student.grNo || null)
-                                            }}>
-                                                <Button
-                                                    className="cursor-pointer"
-                                                    disabled={downloadingStudent[student.grNo]}
-                                                >
+                                            <span onClick={() => handleDownload(student.grNo || null)}>
+                                                <Button className="cursor-pointer" disabled={downloadingStudent[student.grNo]}>
                                                     {downloadingStudent[student.grNo] && (
                                                         <Loader2 className="h-4 w-4 mr-1 animate-spin" />
                                                     )}
@@ -719,9 +702,7 @@ const StoredStudentDetails = () => {
                                         </td>
 
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <span onClick={() => {
-                                                handleDelete(student.grNo || null)
-                                            }}>
+                                            <span onClick={() => handleDelete(student.grNo || null)}>
                                                 <Button
                                                     className="cursor-pointer"
                                                     variant="destructive"
@@ -738,11 +719,7 @@ const StoredStudentDetails = () => {
                                         </td>
 
                                         <td className="px-6 py-4 whitespace-nowrap flex justify-center">
-                                            <span
-                                                onClick={() => {
-                                                    handleGenerateHallTicket(student)
-                                                }}
-                                            >
+                                            <span onClick={() => handleGenerateHallTicket(student)}>
                                                 <Button
                                                     className="cursor-pointer"
                                                     variant="outline"
@@ -756,52 +733,27 @@ const StoredStudentDetails = () => {
                                                 </Button>
                                             </span>
                                         </td>
-
                                     </tr>
                                 ))}
                             </tbody>
                         </table>
 
-
                         <div className='mt-6 flex justify-center items-center'>
-                            {/* Pagination Buttons */}
-                            <div className='flex gap-3 '>
-                                <Button
-                                    variant="outline"
-                                    disabled={page <= 0}
-                                    onClick={() => setPage(0)}
-                                >
+                            <div className='flex gap-3'>
+                                <Button variant="outline" disabled={page <= 0} onClick={() => setPage(0)}>
                                     First Page
                                 </Button>
-
-                                <Button
-                                    variant="outline"
-                                    disabled={page <= 0}
-                                    onClick={() => setPage(page - 1)}
-                                >
+                                <Button variant="outline" disabled={page <= 0} onClick={() => setPage(page - 1)}>
                                     Previous
                                 </Button>
-
-                                <Button
-                                    variant="outline"
-                                    disabled={page >= totalPages - 1}
-                                    onClick={() => setPage(page + 1)}
-                                >
+                                <Button variant="outline" disabled={page >= totalPages - 1} onClick={() => setPage(page + 1)}>
                                     Next
                                 </Button>
-
-                                <Button
-                                    variant="outline"
-                                    disabled={page >= totalPages - 1}
-                                    onClick={() => setPage(totalPages - 1)}
-                                >
+                                <Button variant="outline" disabled={page >= totalPages - 1} onClick={() => setPage(totalPages - 1)}>
                                     Last Page
                                 </Button>
-
                             </div>
-
                         </div>
-
                     </div>
 
                 ) : (
