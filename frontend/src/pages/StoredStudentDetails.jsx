@@ -20,7 +20,7 @@ const StoredStudentDetails = () => {
     const [loading, setLoading] = useState(true);
     const [preview, setPreview] = useState(false)
     const [previewData, setPreviewData] = useState({})
-    const [searchBy, setSearchBy] = useState('rollNo')
+    const [searchBy, setSearchBy] = useState('grNo')
     const [search, setSearch] = useState('')
 
     // Loading states for buttons
@@ -36,11 +36,11 @@ const StoredStudentDetails = () => {
 
     const allowedKeys = [
         "name",
-        "motherName",
-        "studentClass",
         "grNo",
         "rollNo",
-        "result"
+        // "motherName",
+        // "studentClass",
+        // "result"
     ];
 
     // ------------ FETCH DATA -------------
@@ -589,7 +589,7 @@ const StoredStudentDetails = () => {
                             <select
                                 onChange={(e) => setSearchBy(e.currentTarget.value)}
                                 value={searchBy}
-                                className='text-sm rounded-md border px-2 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-ring' name="grNo" id="searchBy">
+                                className='text-sm rounded-md border px-2 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-ring uppercase' name="grNo" id="searchBy">
                                 <option value=""> Select Search Type </option>
                                 {allowedKeys.map((key) => (
                                     <option key={key} value={key}>
@@ -645,9 +645,9 @@ const StoredStudentDetails = () => {
                                 <tr className="bg-linear-to-r from-gray-50 to-gray-100 border-b border-gray-200">
                                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">GR No</th>
                                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Name</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Mother's Name</th>
+                                    {/* <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Mother's Name</th> */}
                                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Class</th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Percentage</th>
+                                    {/* <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Percentage</th> */}
                                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Result</th>
                                     <th className="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Preview</th>
                                     <th className="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Edit</th>
@@ -666,15 +666,15 @@ const StoredStudentDetails = () => {
                                         <td className="px-4 py-3 max-w-[150px] truncate text-sm text-gray-900">
                                             {student.name}
                                         </td>
-                                        <td className="px-4 py-3 max-w-[150px] truncate text-sm text-gray-900">
+                                        {/* <td className="px-4 py-3 max-w-[150px] truncate text-sm text-gray-900">
                                             {student.motherName}
-                                        </td>
+                                        </td> */}
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                             {student.studentClass}
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                                        {/* <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
                                             {student.percentage}%
-                                        </td>
+                                        </td> */}
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span
                                                 className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${student.result === 'Pass'
