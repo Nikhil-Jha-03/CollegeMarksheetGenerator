@@ -640,7 +640,7 @@ const StoredStudentDetails = () => {
 
 
                     <div className='w-7xl m-auto table-fade mt-9'>
-                        <table className="border-collapse border border-gray-300 mt-5 shadow-lg ">
+                        <table className="border-collapse border border-gray-300 mt-5 shadow-lg w-full">
                             <thead>
                                 <tr className="bg-linear-to-r from-gray-50 to-gray-100 border-b border-gray-200">
                                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">GR No</th>
@@ -663,7 +663,7 @@ const StoredStudentDetails = () => {
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                             {student.grNo}
                                         </td>
-                                        <td className="px-4 py-3 max-w-[150px] truncate text-sm text-gray-900">
+                                        <td className="px-4 py-3 max-w-[250px] truncate text-sm text-gray-900">
                                             {student.name}
                                         </td>
                                         {/* <td className="px-4 py-3 max-w-[150px] truncate text-sm text-gray-900">
