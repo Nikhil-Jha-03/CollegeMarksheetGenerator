@@ -368,7 +368,7 @@ public class PdfGenerationImplementation implements PdfGenerationService {
                     .signatures {
                         display: table;
                         width: 100%;
-                        margin-top: 40px;
+                        margin-top: 15px;
                         font-size: 11pt;
                     }
 

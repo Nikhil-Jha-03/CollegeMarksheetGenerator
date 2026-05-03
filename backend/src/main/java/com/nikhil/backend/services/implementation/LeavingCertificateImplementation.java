@@ -87,13 +87,13 @@ public class LeavingCertificateImplementation implements LeavingCertificateServi
             lc.setReasonForLeaving(entity.getReasonForLeaving().trim().toUpperCase());
             lc.setRemarks(entity.getRemarks().trim().toUpperCase());
             lc.setIsDuplicate(entity.getIsDuplicate());
+            lc.setStudentApaarID(null);
 
             // -------- CONDITIONAL FIELDS --------
             if (isPrivateStudent) {
                 // PRIVATE STUDENT → remove ONLY these
                 lc.setGrNo(null);
                 lc.setStudentPEN(null);
-                lc.setStudentApaarID(null);
                 lc.setStudentID(null);
             } else {
                 // REGULAR STUDENT
@@ -102,7 +102,7 @@ public class LeavingCertificateImplementation implements LeavingCertificateServi
                 }
                 lc.setGrNo(entity.getGrNo().trim());
                 lc.setStudentPEN(entity.getStudentPEN() != null ? entity.getStudentPEN().trim() : null);
-                lc.setStudentApaarID(entity.getStudentApaarID() != null ? entity.getStudentApaarID().trim() : null);
+                // lc.setStudentApaarID(entity.getStudentApaarID() != null ? entity.getStudentApaarID().trim() : null);
                 lc.setStudentID(entity.getStudentID() != null ? entity.getStudentID().trim() : null);
             }
 
@@ -420,7 +420,7 @@ public class LeavingCertificateImplementation implements LeavingCertificateServi
         // --- Rows Logic ---
         if ("FOR REGULAR STUDENT".equalsIgnoreCase(lcDTO.getStudentType())) {
             addFullRow(html, null, "Student PEN", safe(lcDTO.getStudentPEN()));
-            addFullRow(html, null, "Student Apaar ID", safe(lcDTO.getStudentApaarID()));
+            // addFullRow(html, null, "Student Apaar ID", safe(lcDTO.getStudentApaarID()));
             addFullRow(html, null, "Student ID", safe(lcDTO.getStudentID()));
         }
 
@@ -581,7 +581,7 @@ public class LeavingCertificateImplementation implements LeavingCertificateServi
 
                 .footer-wrapper {
                     position: absolute;
-                    bottom: 70px;
+                    bottom: 90px;
                     left: 0;
                     width: 100%;
                     padding: 0 20px;
@@ -613,7 +613,7 @@ public class LeavingCertificateImplementation implements LeavingCertificateServi
                 .sig-table td:nth-child(2) { text-align: center; }
                 .sig-table td:last-child { 
                     text-align: right;
-                    padding-right: 0; /* ADD THIS LINE */
+                    padding-right: 30px; /* ADD THIS LINE */
                 }
                 """;
     }
@@ -751,19 +751,19 @@ public class LeavingCertificateImplementation implements LeavingCertificateServi
             lc.setReasonForLeaving(entity.getReasonForLeaving().trim().toUpperCase());
             lc.setRemarks(entity.getRemarks().trim().toUpperCase());
             lc.setIsDuplicate(entity.getIsDuplicate());
+            lc.setStudentApaarID(null);
 
             // ---------------- CONDITIONAL FIELDS ----------------
             if (!isRegularStudent) {
                 // PRIVATE STUDENT
                 lc.setGrNo(null);
                 lc.setStudentPEN(null);
-                lc.setStudentApaarID(null);
                 lc.setStudentID(null);
             } else {
                 // REGULAR STUDENT
                 lc.setGrNo(entity.getGrNo().trim());
                 lc.setStudentPEN(entity.getStudentPEN() != null ? entity.getStudentPEN().trim() : null);
-                lc.setStudentApaarID(entity.getStudentApaarID() != null ? entity.getStudentApaarID().trim() : null);
+                // lc.setStudentApaarID(entity.getStudentApaarID() != null ? entity.getStudentApaarID().trim() : null);
                 lc.setStudentID(entity.getStudentID() != null ? entity.getStudentID().trim() : null);
             }
 
