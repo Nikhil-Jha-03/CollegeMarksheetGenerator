@@ -368,7 +368,7 @@ public class PdfGenerationImplementation implements PdfGenerationService {
                     .signatures {
                         display: table;
                         width: 100%;
-                        margin-top: 15px;
+                        margin-top: 10px;
                         font-size: 11pt;
                     }
 
@@ -382,7 +382,7 @@ public class PdfGenerationImplementation implements PdfGenerationService {
 
                     .signature-box p {
                         margin: 0;
-                        padding-top: 50px;
+                        padding-top: 40px;
                         border-top: 1px solid transparent;
                     }
 

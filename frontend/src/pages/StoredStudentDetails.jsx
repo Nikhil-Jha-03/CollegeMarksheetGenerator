@@ -208,7 +208,7 @@ const StoredStudentDetails = () => {
         }
     };
 
-    const handleDownload = async (grNo) => {
+    const handleDownload = async (grNo,name) => {
         const numericGrno = parseInt(grNo);
 
         if (isNaN(numericGrno) || numericGrno <= 0) {
@@ -229,7 +229,7 @@ const StoredStudentDetails = () => {
             const url = window.URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            link.download = `Report_Card_${Date.now()}.pdf`;
+            link.download = `Report_Card_${name || "report_card"}.pdf`;
 
             document.body.appendChild(link);
             link.click();
@@ -691,7 +691,7 @@ const StoredStudentDetails = () => {
                                         </td>
 
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <span onClick={() => handleDownload(student.grNo || null)}>
+                                            <span onClick={() => handleDownload(student.grNo || null, student.name || "report_card")}>
                                                 <Button className="cursor-pointer" disabled={downloadingStudent[student.grNo]}>
                                                     {downloadingStudent[student.grNo] && (
                                                         <Loader2 className="h-4 w-4 mr-1 animate-spin" />

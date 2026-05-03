@@ -613,7 +613,7 @@ public class LeavingCertificateImplementation implements LeavingCertificateServi
                 .sig-table td:nth-child(2) { text-align: center; }
                 .sig-table td:last-child { 
                     text-align: right;
-                    padding-right: 30px; /* ADD THIS LINE */
+                    padding-right: 50px; /* ADD THIS LINE */
                 }
                 """;
     }
