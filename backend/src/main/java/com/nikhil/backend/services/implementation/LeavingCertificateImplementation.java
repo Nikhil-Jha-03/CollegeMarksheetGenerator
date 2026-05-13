@@ -55,10 +55,6 @@ public class LeavingCertificateImplementation implements LeavingCertificateServi
             boolean isPrivateStudent = "FOR PRIVATE STUDENT".equalsIgnoreCase(entity.getStudentType());
             LeavingCertificate lc = new LeavingCertificate();
 
-            if (leavingCertificateRepository.existsByUniqueIDAdhar(entity.getUniqueIDAdhar().trim())) {
-                return new ApiResponse<>(false, "Aadhaar ID already exists", null);
-            }
-
             // GR No duplicate check (only regular student)
             if (!isPrivateStudent && entity.getGrNo() != null) {
                 if (leavingCertificateRepository.existsByGrNo(entity.getGrNo().trim())) {
@@ -102,7 +98,8 @@ public class LeavingCertificateImplementation implements LeavingCertificateServi
                 }
                 lc.setGrNo(entity.getGrNo().trim());
                 lc.setStudentPEN(entity.getStudentPEN() != null ? entity.getStudentPEN().trim() : null);
-                // lc.setStudentApaarID(entity.getStudentApaarID() != null ? entity.getStudentApaarID().trim() : null);
+                // lc.setStudentApaarID(entity.getStudentApaarID() != null ?
+                // entity.getStudentApaarID().trim() : null);
                 lc.setStudentID(entity.getStudentID() != null ? entity.getStudentID().trim() : null);
             }
 
@@ -218,11 +215,6 @@ public class LeavingCertificateImplementation implements LeavingCertificateServi
             return new ApiResponse<>(false, "Date of Birth cannot be after Date of Admission", null);
         }
 
-        // Validate Aadhar format (12 digits)
-        if (!isValidAadhar(dto.getUniqueIDAdhar())) {
-            return new ApiResponse<>(false, "Invalid Aadhar format. It should be 12 digits", null);
-        }
-
         return new ApiResponse<>(true, "Validation successful", null);
     }
 
@@ -239,16 +231,6 @@ public class LeavingCertificateImplementation implements LeavingCertificateServi
     private boolean isValidStudentType(String studentType) {
         return "FOR PRIVATE STUDENT".equalsIgnoreCase(studentType) ||
                 "FOR REGULAR STUDENT".equalsIgnoreCase(studentType);
-    }
-
-    /**
-     * Helper method to validate Aadhar format (12 digits)
-     */
-    private boolean isValidAadhar(String aadhar) {
-        if (isNullOrBlank(aadhar)) {
-            return false;
-        }
-        return aadhar.trim().matches("^\\d{12}$");
     }
 
     @Override
@@ -429,7 +411,7 @@ public class LeavingCertificateImplementation implements LeavingCertificateServi
         int n = 1;
 
         addFullRow(html, n++,
-                "Name of the Student in Full<br><span style='font-size:7pt; font-weight:normal;'>(Name-Father's name-Surname)</span>",
+                "Name of the Student in Full<br><span style='font-size:8.5pt; font-weight:normal;'>(Name-Father's name-Surname)</span>",
                 safe(lcDTO.getStudentName()));
         addFullRow(html, n++, "Mother's Name", safe(lcDTO.getMotherName()));
         addFullRow(html, n++, "Nationality", safe(lcDTO.getNationality()));
@@ -437,7 +419,7 @@ public class LeavingCertificateImplementation implements LeavingCertificateServi
         addFullRow(html, n++, "Religion", safe(lcDTO.getReligion()));
         addFullRow(html, n++, "Caste & Sub-Caste", safe(lcDTO.getCaste()));
         addFullRow(html, n++,
-                "Place of Birth<br><span style='font-size:7pt; font-weight:normal;'>(Village/City, Taluka Zilla, State, Country)</span>",
+                "Place of Birth<br><span style='font-size:8.5pt; font-weight:normal;'>(Village/City, Taluka Zilla, State, Country)</span>",
                 safe(lcDTO.getPlaceOfBirth()));
         addFullRow(html, n++, "Date of Birth (according to Christian era.)",
                 formatDate(lcDTO.getDateOfBirth(), formatter));
@@ -453,6 +435,11 @@ public class LeavingCertificateImplementation implements LeavingCertificateServi
         addFullRow(html, n++, "Reason for leaving the College", safe(lcDTO.getReasonForLeaving()));
         addFullRow(html, n++, "Remarks", safe(lcDTO.getRemarks()));
 
+        String footerClass = "FOR REGULAR STUDENT"
+                .equalsIgnoreCase(lcDTO.getStudentType())
+                        ? "footer-wrapper-regular"
+                        : "footer-wrapper";
+
         html.append(
                 """
                                     </table>
@@ -463,8 +450,7 @@ public class LeavingCertificateImplementation implements LeavingCertificateServi
                                         that the above information is the accordance with the <b>School General Register</b>
                                     </div>
 
-                                    <div class="footer-wrapper">
-
+                                    <div class="%s">
 
                                         <table class="sig-table">
                                             <tr>
@@ -474,11 +460,14 @@ public class LeavingCertificateImplementation implements LeavingCertificateServi
                                             </tr>
                                         </table>
 
-                                    </div> </div> </div>
+                                    </div>
+
+                                </div>
+                            </div>
                         </body>
                         </html>
-                        """);
-
+                        """
+                        .formatted(footerClass));
         return html.toString();
     }
 
@@ -508,28 +497,29 @@ public class LeavingCertificateImplementation implements LeavingCertificateServi
                     line-height: 1.3;
                     color: #000;
                 }
-                .container { padding: 5px; }
+                .container { padding: 2px; }
 
                 /* --- NEW HEADER STYLES (No Table) --- */
                 .header-box {
                     position: relative; /* Anchor for the absolute logo */
-                    padding: 10px 5px;
-                    margin-bottom: 5px;
+                    padding: 3px 1px;
+                    margin-bottom: 3px;
                     min-height: 100px; /* Ensures height even if text is short */
                 }
 
                 .logo-container {
                     position: absolute;
-                    left: 10px;  /* Distance from left border */
+                    left: 0px;  /* Distance from left border */
                     top: 5px;    /* Distance from top border - Move this to adjust "up/down" */
-                    width: 90px;
+                    width: 105px;
                     text-align: center;
                     z-index: 10;
                 }
 
                 .logo {
-                    width: 80px;
+                    width: 105px;
                     height: auto;
+
                 }
 
                 .college-info {
@@ -541,7 +531,7 @@ public class LeavingCertificateImplementation implements LeavingCertificateServi
                 /* ------------------------------------ */
 
                 .trust-name { font-size: 8pt; font-weight: 600; margin-bottom: 2px; }
-                .college-name { font-size: 13pt; font-weight: bold; margin-bottom: 2px; text-transform: uppercase; color: #222; }
+                .college-name { font-size: 12pt; font-weight: bold; margin-bottom: 2px; text-transform: uppercase; color: #222; }
                 .board-info { font-size: 8pt; font-weight: normal; margin-bottom: 2px; }
                 .address-line, .contact-line { font-size: 7.5pt; font-weight: normal; line-height: 1.2; }
 
@@ -575,13 +565,21 @@ public class LeavingCertificateImplementation implements LeavingCertificateServi
                 }
 
                 .info-table { width: 100%; border-collapse: collapse; border: 1px solid #000; }
-                .info-table td { border: 1px solid #000; padding: 4px 6px; font-size: 8.5pt; vertical-align: middle; }
+                .info-table td { border: 1px solid #000; padding: 6px 8px; font-size: 9.5pt; vertical-align: middle; }
                 .label-cell { width: 30%; font-weight: normal; background-color: #e5e5e5; }
                 .value-cell { font-weight: 600; text-transform: uppercase; }
 
                 .footer-wrapper {
                     position: absolute;
-                    bottom: 90px;
+                    bottom: 70px;
+                    left: 0;
+                    width: 100%;
+                    padding: 0 20px;
+                }
+
+                .footer-wrapper-regular {
+                 position: absolute;
+                    bottom: 40px;
                     left: 0;
                     width: 100%;
                     padding: 0 20px;
@@ -591,7 +589,7 @@ public class LeavingCertificateImplementation implements LeavingCertificateServi
                     font-size: 8pt;
                     text-align: justify;
                     line-height: 1.4;
-                    padding-bottom: 5px;
+                    padding-bottom: 10px;
                     padding-top: 8px;
                     margin-bottom: 30px; /* Space between note and signatures */
                 }
@@ -600,18 +598,18 @@ public class LeavingCertificateImplementation implements LeavingCertificateServi
                     width: 100%;
                     table-layout: fixed; /* Ensures equal width for centering Clerk */
                 }
-                .sig-table td { 
-                    font-weight: bold; 
-                    font-size: 10pt; 
+                .sig-table td {
+                    font-weight: bold;
+                    font-size: 10pt;
                     vertical-align: bottom;
                     width: 33.33%; /* ADD THIS LINE */
                 }
-                .sig-table td:first-child { 
+                .sig-table td:first-child {
                     text-align: left;
                     padding-left: 0; /* ADD THIS LINE */
                 }
                 .sig-table td:nth-child(2) { text-align: center; }
-                .sig-table td:last-child { 
+                .sig-table td:last-child {
                     text-align: right;
                     padding-right: 50px; /* ADD THIS LINE */
                 }
@@ -636,7 +634,24 @@ public class LeavingCertificateImplementation implements LeavingCertificateServi
      */
 
     private String safe(Object val) {
-        return val == null ? "" : val.toString();
+
+        if (val == null) {
+            return "N/A";
+        }
+
+        String value = val.toString().trim();
+
+        // Empty string
+        if (value.isEmpty()) {
+            return "N/A";
+        }
+
+        // Check if value contains only zeros
+        if (value.matches("^0+$")) {
+            return "N/A";
+        }
+
+        return value;
     }
 
     /**
@@ -700,17 +715,6 @@ public class LeavingCertificateImplementation implements LeavingCertificateServi
 
             // ---------------- DUPLICATE CHECKS ----------------
 
-            // Aadhaar check (for ALL students)
-            if (entity.getUniqueIDAdhar() != null && !entity.getUniqueIDAdhar().isBlank()) {
-                boolean aadhaarExists = leavingCertificateRepository
-                        .existsByUniqueIDAdharAndIdNot(entity.getUniqueIDAdhar().trim(), id);
-
-                if (aadhaarExists) {
-                    return new ApiResponse<>(false,
-                            "Aadhaar ID already exists for another student", null);
-                }
-            }
-
             boolean isRegularStudent = "FOR REGULAR STUDENT"
                     .equalsIgnoreCase(entity.getStudentType());
 
@@ -732,7 +736,7 @@ public class LeavingCertificateImplementation implements LeavingCertificateServi
 
             // ---------------- UPDATE COMMON FIELDS ----------------
             lc.setStudentType(entity.getStudentType().trim());
-            lc.setUniqueIDAdhar(entity.getUniqueIDAdhar().trim());
+            lc.setUniqueIDAdhar(safe(entity.getUniqueIDAdhar()));
             lc.setStudentName(entity.getStudentName().trim().toUpperCase());
             lc.setMotherName(entity.getMotherName().trim().toUpperCase());
             lc.setNationality(entity.getNationality().trim().toUpperCase());
@@ -763,7 +767,8 @@ public class LeavingCertificateImplementation implements LeavingCertificateServi
                 // REGULAR STUDENT
                 lc.setGrNo(entity.getGrNo().trim());
                 lc.setStudentPEN(entity.getStudentPEN() != null ? entity.getStudentPEN().trim() : null);
-                // lc.setStudentApaarID(entity.getStudentApaarID() != null ? entity.getStudentApaarID().trim() : null);
+                // lc.setStudentApaarID(entity.getStudentApaarID() != null ?
+                // entity.getStudentApaarID().trim() : null);
                 lc.setStudentID(entity.getStudentID() != null ? entity.getStudentID().trim() : null);
             }
 
@@ -789,5 +794,4 @@ public class LeavingCertificateImplementation implements LeavingCertificateServi
         }
 
     }
-
 }

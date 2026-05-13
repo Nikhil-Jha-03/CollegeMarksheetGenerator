@@ -841,8 +841,6 @@ const LeavingCertificate = ({ editMode = false }) => {
                                             name="uniqueIDAdhar"
                                             value={formData.uniqueIDAdhar}
                                             onChange={handleInputChange}
-                                            maxLength="12"
-                                            pattern="\d{12}"
                                             className="w-full border-b border-gray-300 focus:outline-none focus:border-black uppercase p-1 text-sm md:text-base"
                                             placeholder="Enter 12-digit Aadhaar"
                                         />

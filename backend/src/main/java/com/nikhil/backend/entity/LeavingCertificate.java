@@ -48,7 +48,7 @@ public class LeavingCertificate {
 
     private String studentPEN;
 
-    @Column(name = "unique_id_adhar", unique = true)
+    @Column(name = "unique_id_adhar")
     private String uniqueIDAdhar;
 
     private String studentApaarID;

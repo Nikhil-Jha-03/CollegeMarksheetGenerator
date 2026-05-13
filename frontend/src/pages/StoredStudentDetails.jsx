@@ -2,11 +2,17 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import api from '../api/axios';
 import { toast } from 'react-toastify';
-import { Trash, Loader2, CloudFog, X, FileText, Download } from 'lucide-react';
+import { Trash, Loader2, X, Download, MoreVertical } from 'lucide-react';
 import Templete from './Templete'
 import Swal from "sweetalert2";;
 import { useNavigate } from 'react-router-dom';
 import * as XLSX from 'xlsx';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const StoredStudentDetails = () => {
 
@@ -16,12 +22,13 @@ const StoredStudentDetails = () => {
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
     const [totalElement, setTotalElement] = useState(0);
-    const timeoutRef = useRef(null);
+    const firstRender = useRef(true);
     const [loading, setLoading] = useState(true);
     const [preview, setPreview] = useState(false)
     const [previewData, setPreviewData] = useState({})
     const [searchBy, setSearchBy] = useState('grNo')
     const [search, setSearch] = useState('')
+    const [tableLoading, setTableLoading] = useState(false);
 
     // Loading states for buttons
     const [downloadingAll, setDownloadingAll] = useState(false);
@@ -45,7 +52,11 @@ const StoredStudentDetails = () => {
 
     // ------------ FETCH DATA -------------
     const fetchStudentDetails = async () => {
-        setLoading(true);
+        if (studentsData.length === 0) {
+            setLoading(true);
+        } else {
+            setTableLoading(true);
+        }
 
         try {
             const response = await api.get(`/student/getsavedstudent?page=${page}&size=${pageSize}&searchBy=${searchBy}&search=${search}`, { withCredentials: true });
@@ -60,6 +71,7 @@ const StoredStudentDetails = () => {
             toast.error("Something went wrong");
         } finally {
             setLoading(false);
+            setTableLoading(false);
         }
     };
 
@@ -208,7 +220,7 @@ const StoredStudentDetails = () => {
         }
     };
 
-    const handleDownload = async (grNo,name) => {
+    const handleDownload = async (grNo, name) => {
         const numericGrno = parseInt(grNo);
 
         if (isNaN(numericGrno) || numericGrno <= 0) {
@@ -461,16 +473,23 @@ const StoredStudentDetails = () => {
 
     // ------------ DEBOUNCE FETCH -------------
     useEffect(() => {
-        clearTimeout(timeoutRef.current);
+        fetchStudentDetails();
+    }, [page, pageSize]);
 
-        timeoutRef.current = setTimeout(() => {
+    useEffect(() => {
+
+        if (firstRender.current) {
+            firstRender.current = false;
+            return;
+        }
+
+        const timeout = setTimeout(() => {
             fetchStudentDetails();
-        }, 600);
+        }, 400);
 
-        return () => clearTimeout(timeoutRef.current);
-    }, [page, pageSize, search]);
+        return () => clearTimeout(timeout);
 
-
+    }, [search]);
     if (preview) {
         return (
             <div className='w-full bg-gray-50'>
@@ -497,89 +516,125 @@ const StoredStudentDetails = () => {
                     <p className="text-gray-600 text-sm">Manage and view all student marksheets</p>
                 </div>
 
-                <div className='w-7xl m-auto mt-7 flex '>
-                    <div className='w-full flex items-center gap-4 justify-between'>
+               <div className='w-7xl m-auto mt-7'>
 
-                        {/* Rows Input */}
+    <div className='bg-white border border-gray-200 shadow-sm rounded-xl px-5 py-4 flex items-center justify-between'>
 
-                        <label
-                            htmlFor="rows"
-                            className="inline-flex items-center gap-2 text-sm font-medium text-gray-700"
-                        >
-                            <span>Rows</span>
+        {/* LEFT SECTION */}
+        <div className='flex items-center gap-6'>
 
-                            <input
-                                id="rows"
-                                name="rows"
-                                type="number"
-                                min={1}
-                                max={totalElement}
-                                value={pageSize}
-                                onChange={(e) => {
-                                    let v = Number(e.target.value);
-                                    if (Number.isNaN(v)) return;
-                                    if (v < 1) v = 1;
-                                    if (v > 500) v = 500;
+            {/* Rows */}
+            <label
+                htmlFor="rows"
+                className="inline-flex items-center gap-2 text-sm font-medium text-gray-700"
+            >
+                <span>Rows</span>
 
-                                    setPageSize(v);
-                                    setPage(0); // reset to first page
-                                }}
-                                className="w-14 text-sm rounded-md border px-2 py-1 shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                            />
-                        </label>
+                <input
+                    id="rows"
+                    name="rows"
+                    type="number"
+                    min={1}
+                    max={totalElement}
+                    value={pageSize}
+                    onChange={(e) => {
+                        let v = Number(e.target.value);
 
+                        if (Number.isNaN(v)) return;
 
-                        <div className='flex gap-4'>
-                            {/* Page Info */}
-                            <div className='flex gap-2 items-center text-sm'>
-                                <span>Page</span>
-                                <span className="font-semibold">{page + 1}</span>
-                                <span>of</span>
-                                <span className="font-semibold">{totalPages}</span>
-                            </div>
-                            {/* Download All */}
-                            <div>
-                                <span onClick={handleDownloadAll}>
-                                    <Button className="cursor-pointer" disabled={downloadingAll}>
-                                        {downloadingAll && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                                        Download All
-                                    </Button>
-                                </span>
-                            </div>
+                        if (v < 1) v = 1;
+                        if (v > 500) v = 500;
 
-                            {/* Excel Download */}
-                            <div>
-                                <span onClick={downloadExcel}>
-                                    <Button className='cursor-pointer' disabled={downloadingExcel}>
-                                        {downloadingExcel && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                                        Excel Download
-                                    </Button>
-                                </span>
-                            </div>
+                        if (v !== pageSize) {
+                            setPage(0);
+                            setPageSize(v);
+                        }
+                    }}
+                    className="w-16 text-sm rounded-md border px-2 py-1 shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+            </label>
 
-                            <div>
-                                <span onClick={batchLcDownload}>
-                                    <Button className='cursor-pointer' disabled={batchHallTicket}>
-                                        {batchHallTicket && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                                        Hall Ticket Downlaod
-                                    </Button>
-                                </span>
-                            </div>
+            {/* Page Info */}
+            <div className='flex gap-2 items-center text-sm text-gray-700'>
+                <span>Page</span>
 
-                            <div>
-                                <span onClick={handleDeleteAll}>
-                                    <Button className='cursor-pointer' variant="destructive" disabled={deletingAll}>
-                                        {deletingAll && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                                        Delete All Student Record
-                                    </Button>
-                                </span>
-                            </div>
+                <span className="font-semibold bg-gray-100 px-2 py-1 rounded">
+                    {page + 1}
+                </span>
 
-                        </div>
+                <span>of</span>
 
+                <span className="font-semibold">
+                    {totalPages}
+                </span>
+            </div>
 
-                    </div>
-                </div>
+        </div>
+
+        {/* RIGHT SECTION */}
+        <div className='flex items-center gap-3'>
+
+            {/* Main Action */}
+            <Button
+                className="cursor-pointer"
+                disabled={downloadingAll}
+                onClick={handleDownloadAll}
+            >
+                {downloadingAll && (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                )}
+
+                Download All
+            </Button>
+
+            {/* Dropdown Actions */}
+            <DropdownMenu>
+
+                <DropdownMenuTrigger asChild>
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className="cursor-pointer"
+                    >
+                        <MoreVertical className="h-5 w-5" />
+                    </Button>
+                </DropdownMenuTrigger>
+
+                <DropdownMenuContent align="end" className="w-56">
+
+                    <DropdownMenuItem onClick={downloadExcel}>
+                        {downloadingExcel && (
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        )}
+                        Excel Download
+                    </DropdownMenuItem>
+
+                    <DropdownMenuItem onClick={batchLcDownload}>
+                        {batchHallTicket && (
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        )}
+                        Hall Ticket Download
+                    </DropdownMenuItem>
+
+                    <DropdownMenuItem
+                        onClick={handleDeleteAll}
+                        className="text-red-600 focus:text-red-600"
+                    >
+                        {deletingAll && (
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        )}
+                        Delete All Student Record
+                    </DropdownMenuItem>
+
+                </DropdownMenuContent>
+
+            </DropdownMenu>
+
+        </div>
+
+    </div>
+
+</div>
 
                 {/* Search */}
                 <div className='w-7xl m-auto table-fade mt-8'>
@@ -639,7 +694,15 @@ const StoredStudentDetails = () => {
                 ) : studentsData.length > 0 ? (
 
 
-                    <div className='w-7xl m-auto table-fade mt-9 px-4'>
+                    <div className='w-7xl m-auto table-fade mt-9 px-4 relative'>
+
+                        {tableLoading && (
+                            <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center z-20 rounded-md">
+                                <Loader2 className="h-7 w-7 animate-spin text-gray-600" />
+                            </div>
+                        )}
+
+
                         <table className="min-w-full border-collapse border border-gray-300 mt-5 shadow-lg">
                             <thead>
                                 <tr className="bg-linear-to-r from-gray-50 to-gray-100 border-b border-gray-200">
@@ -657,7 +720,7 @@ const StoredStudentDetails = () => {
 
                             <tbody>
                                 {studentsData.map((student, index) => (
-                                    <tr key={index} className="hover:bg-gray-50">
+                                    <tr key={student.grNo} className="hover:bg-gray-50">
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                             {student.grNo}
                                         </td>
@@ -670,8 +733,8 @@ const StoredStudentDetails = () => {
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span
                                                 className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${student.result === 'Pass'
-                                                        ? 'bg-green-100 text-green-800'
-                                                        : 'bg-red-100 text-red-800'
+                                                    ? 'bg-green-100 text-green-800'
+                                                    : 'bg-red-100 text-red-800'
                                                     }`}
                                             >
                                                 {student.result}
