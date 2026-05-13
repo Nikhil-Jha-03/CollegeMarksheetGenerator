@@ -516,125 +516,122 @@ const StoredStudentDetails = () => {
                     <p className="text-gray-600 text-sm">Manage and view all student marksheets</p>
                 </div>
 
-               <div className='w-7xl m-auto mt-7'>
+                <div className='w-7xl m-auto mt-7'>
 
-    <div className='bg-white border border-gray-200 shadow-sm rounded-xl px-5 py-4 flex items-center justify-between'>
+                    <div className='bg-white border border-gray-200 shadow-sm rounded-xl px-5 py-4 flex items-center justify-between'>
 
-        {/* LEFT SECTION */}
-        <div className='flex items-center gap-6'>
+                        {/* LEFT SECTION */}
+                        <div className='flex items-center gap-6'>
 
-            {/* Rows */}
-            <label
-                htmlFor="rows"
-                className="inline-flex items-center gap-2 text-sm font-medium text-gray-700"
-            >
-                <span>Rows</span>
+                            {/* Rows */}
+                            <label
+                                htmlFor="rows"
+                                className="inline-flex items-center gap-2 text-sm font-medium text-gray-700"
+                            >
+                                <span>Rows</span>
 
-                <input
-                    id="rows"
-                    name="rows"
-                    type="number"
-                    min={1}
-                    max={totalElement}
-                    value={pageSize}
-                    onChange={(e) => {
-                        let v = Number(e.target.value);
+                                <select
+                                    id="rows"
+                                    value={pageSize}
+                                    onChange={(e) => {
+                                        const v = Number(e.target.value);
 
-                        if (Number.isNaN(v)) return;
+                                        if (v !== pageSize) {
+                                            setPage(0);
+                                            setPageSize(v);
+                                        }
+                                    }}
+                                    className="text-sm rounded-md border px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                                >
+                                    <option value={5}>5</option>
+                                    <option value={10}>10</option>
+                                    <option value={20}>20</option>
+                                    <option value={50}>50</option>
+                                    <option value={100}>100</option>
+                                </select>
+                            </label>
 
-                        if (v < 1) v = 1;
-                        if (v > 500) v = 500;
+                            {/* Page Info */}
+                            <div className='flex gap-2 items-center text-sm text-gray-700'>
+                                <span>Page</span>
 
-                        if (v !== pageSize) {
-                            setPage(0);
-                            setPageSize(v);
-                        }
-                    }}
-                    className="w-16 text-sm rounded-md border px-2 py-1 shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-            </label>
+                                <span className="font-semibold bg-gray-100 px-2 py-1 rounded">
+                                    {page + 1}
+                                </span>
 
-            {/* Page Info */}
-            <div className='flex gap-2 items-center text-sm text-gray-700'>
-                <span>Page</span>
+                                <span>of</span>
 
-                <span className="font-semibold bg-gray-100 px-2 py-1 rounded">
-                    {page + 1}
-                </span>
+                                <span className="font-semibold">
+                                    {totalPages}
+                                </span>
+                            </div>
 
-                <span>of</span>
+                        </div>
 
-                <span className="font-semibold">
-                    {totalPages}
-                </span>
-            </div>
+                        {/* RIGHT SECTION */}
+                        <div className='flex items-center gap-3'>
 
-        </div>
+                            {/* Main Action */}
+                            <Button
+                                className="cursor-pointer"
+                                disabled={downloadingAll}
+                                onClick={handleDownloadAll}
+                            >
+                                {downloadingAll && (
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                )}
 
-        {/* RIGHT SECTION */}
-        <div className='flex items-center gap-3'>
+                                Download All
+                            </Button>
 
-            {/* Main Action */}
-            <Button
-                className="cursor-pointer"
-                disabled={downloadingAll}
-                onClick={handleDownloadAll}
-            >
-                {downloadingAll && (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                )}
+                            {/* Dropdown Actions */}
+                            <DropdownMenu>
 
-                Download All
-            </Button>
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        className="cursor-pointer"
+                                    >
+                                        <MoreVertical className="h-5 w-5" />
+                                    </Button>
+                                </DropdownMenuTrigger>
 
-            {/* Dropdown Actions */}
-            <DropdownMenu>
+                                <DropdownMenuContent align="end" className="w-56">
 
-                <DropdownMenuTrigger asChild>
-                    <Button
-                        variant="outline"
-                        size="icon"
-                        className="cursor-pointer"
-                    >
-                        <MoreVertical className="h-5 w-5" />
-                    </Button>
-                </DropdownMenuTrigger>
+                                    <DropdownMenuItem onClick={downloadExcel}>
+                                        {downloadingExcel && (
+                                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                        )}
+                                        Excel Download
+                                    </DropdownMenuItem>
 
-                <DropdownMenuContent align="end" className="w-56">
+                                    <DropdownMenuItem onClick={batchLcDownload}>
+                                        {batchHallTicket && (
+                                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                        )}
+                                        Hall Ticket Download
+                                    </DropdownMenuItem>
 
-                    <DropdownMenuItem onClick={downloadExcel}>
-                        {downloadingExcel && (
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        )}
-                        Excel Download
-                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        onClick={handleDeleteAll}
+                                        className="text-red-600 focus:text-red-600"
+                                    >
+                                        {deletingAll && (
+                                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                        )}
+                                        Delete All Student Record
+                                    </DropdownMenuItem>
 
-                    <DropdownMenuItem onClick={batchLcDownload}>
-                        {batchHallTicket && (
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        )}
-                        Hall Ticket Download
-                    </DropdownMenuItem>
+                                </DropdownMenuContent>
 
-                    <DropdownMenuItem
-                        onClick={handleDeleteAll}
-                        className="text-red-600 focus:text-red-600"
-                    >
-                        {deletingAll && (
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        )}
-                        Delete All Student Record
-                    </DropdownMenuItem>
+                            </DropdownMenu>
 
-                </DropdownMenuContent>
+                        </div>
 
-            </DropdownMenu>
+                    </div>
 
-        </div>
-
-    </div>
-
-</div>
+                </div>
 
                 {/* Search */}
                 <div className='w-7xl m-auto table-fade mt-8'>
